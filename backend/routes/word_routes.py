@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from backend.modules.word_manager import WordManager
 from backend.modules.review_manager import ReviewManager
 from backend.modules.audio_manager import AudioManager
+from backend.modules.dictionary_manager import DictionaryManager
 
 word_bp = Blueprint('words', __name__, url_prefix='/api/words')
 
@@ -41,9 +42,11 @@ def add_word():
             }), 400
 
         # 获取音频信息
-        audio_info = AudioManager.get_phonetic_and_audio(data["word"])
-        if audio_info.get("phonetic"):
-            data["phonetic"] = audio_info["phonetic"]
+        data = DictionaryManager.enrich_word_data(data)
+        if not data.get("phonetic"):
+            audio_info = AudioManager.get_phonetic_and_audio(data["word"])
+            if audio_info.get("phonetic"):
+                data["phonetic"] = audio_info["phonetic"]
 
         # 添加单词
         result = word_manager.add_word(data)

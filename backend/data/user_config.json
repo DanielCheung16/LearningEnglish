@@ -4,7 +4,7 @@
     "name": "Daniel"
   },
   "email_settings": {
-    "enable_reminders": false,
+    "enable_reminders": true,
     "reminder_frequency": "daily",
     "reminder_time": "09:00",
     "smtp_server": "smtp.gmail.com",

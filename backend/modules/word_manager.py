@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from typing import List, Dict, Optional
 import uuid
+from backend.modules.dictionary_manager import DictionaryManager
 
 class WordManager:
     """管理单词数据库，处理JSON文件的读写"""
@@ -143,7 +144,8 @@ class WordManager:
 
         for word_data in words_list:
             try:
-                self.add_word(word_data)
+                enriched_word_data = DictionaryManager.enrich_word_data(word_data)
+                self.add_word(enriched_word_data)
                 import_count += 1
             except Exception as e:
                 errors.append({"word": word_data.get("word"), "error": str(e)})

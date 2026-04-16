@@ -2,8 +2,8 @@
   "metadata": {
     "version": "1.0",
     "created_date": "2026-04-15T17:39:08.966665",
-    "total_words": 3,
-    "last_sync": "2026-04-15T18:52:04.017825"
+    "total_words": 4,
+    "last_sync": "2026-04-15T20:45:09.167908"
   },
   "words": [
     {
@@ -39,6 +39,19 @@
       "translations": [
         {
           "meaning": "修改",
+          "part_of_speech": "noun"
+        }
+      ],
+      "examples": [],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_a9f8bbf0",
+      "word": "algorithm",
+      "phonetic": "/ˈælɡəɹɪðm̩/",
+      "translations": [
+        {
+          "meaning": "算法",
           "part_of_speech": "noun"
         }
       ],

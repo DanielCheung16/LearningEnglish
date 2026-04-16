@@ -32,6 +32,17 @@
       "master_level": 0,
       "last_review_date": null,
       "status": "pending"
+    },
+    {
+      "id": "review_3f595824",
+      "word_id": "word_a9f8bbf0",
+      "word": "algorithm",
+      "review_count": 0,
+      "review_dates": [],
+      "next_review_date": "2026-04-16",
+      "master_level": 0,
+      "last_review_date": null,
+      "status": "pending"
     }
   ]
 }
