@@ -103,11 +103,11 @@ class ReviewManager:
             next_review_time = SpacedRepetitionAlgorithm.now() + SpacedRepetitionAlgorithm.days_to_interval(
                 float(fsrs["stability"])
             )
-            normalized["next_review_date"] = SpacedRepetitionAlgorithm.format_review_time(next_review_time)
+            normalized["next_review_date"] = SpacedRepetitionAlgorithm.serialize_review_time(next_review_time)
         else:
             parsed_next = SpacedRepetitionAlgorithm.parse_review_time(normalized["next_review_date"])
             if parsed_next:
-                normalized["next_review_date"] = SpacedRepetitionAlgorithm.format_review_time(parsed_next)
+                normalized["next_review_date"] = SpacedRepetitionAlgorithm.serialize_review_time(parsed_next)
 
         return normalized
 
@@ -134,7 +134,7 @@ class ReviewManager:
             "word": word,
             "review_count": 0,
             "review_dates": [],
-            "next_review_date": SpacedRepetitionAlgorithm.format_review_time(next_review_time),
+            "next_review_date": SpacedRepetitionAlgorithm.serialize_review_time(next_review_time),
             "master_level": 0,
             "last_review_date": None,
             "status": "pending",
@@ -180,7 +180,7 @@ class ReviewManager:
         })
         record["fsrs"] = fsrs_state
         record["lapse_count"] = int(fsrs_state.get("lapses", 0))
-        record["next_review_date"] = SpacedRepetitionAlgorithm.format_review_time(next_review)
+        record["next_review_date"] = SpacedRepetitionAlgorithm.serialize_review_time(next_review)
         record["master_level"] = SpacedRepetitionAlgorithm.calculate_master_level(
             record["review_dates"],
             fsrs_state,
@@ -296,7 +296,7 @@ class ReviewManager:
         )
         record["review_count"] = 0
         record["review_dates"] = []
-        record["next_review_date"] = SpacedRepetitionAlgorithm.format_review_time(next_review_time)
+        record["next_review_date"] = SpacedRepetitionAlgorithm.serialize_review_time(next_review_time)
         record["master_level"] = 0
         record["last_review_date"] = None
         record["status"] = "pending"

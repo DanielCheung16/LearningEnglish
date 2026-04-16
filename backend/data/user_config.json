@@ -10,7 +10,8 @@
     "smtp_server": "smtp.gmail.com",
     "smtp_port": 587,
     "sender_email": "7danielcheung@gmail.com",
-    "app_password": "dmoe ldlq yxkn owii"
+    "app_password": "dmoe ldlq yxkn owii",
+    "last_sent_date": "2026-04-16"
   },
   "review_settings": {
     "intervals": [

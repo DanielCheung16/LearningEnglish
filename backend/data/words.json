@@ -2,8 +2,8 @@
   "metadata": {
     "version": "1.0",
     "created_date": "2026-04-15T17:39:08.966665",
-    "total_words": 11,
-    "last_sync": "2026-04-15T22:21:25.189533"
+    "total_words": 12,
+    "last_sync": "2026-04-16T17:34:25.640816"
   },
   "words": [
     {
@@ -226,6 +226,14 @@
         }
       ],
       "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_232bbce3",
+      "word": "timedemo",
+      "phonetic": "",
+      "translations": [],
+      "examples": [],
+      "added_date": "2026-04-16"
     }
   ]
 }

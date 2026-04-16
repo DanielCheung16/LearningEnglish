@@ -1,5 +1,6 @@
 import math
 from datetime import datetime, timedelta
+from math import ceil
 from typing import Dict, List, Optional
 
 
@@ -49,6 +50,10 @@ class SpacedRepetitionAlgorithm:
     @staticmethod
     def format_review_time(value: datetime) -> str:
         return value.strftime(SpacedRepetitionAlgorithm.DATETIME_FORMAT)
+
+    @staticmethod
+    def format_review_date(value: datetime) -> str:
+        return value.strftime(SpacedRepetitionAlgorithm.DATE_FORMAT)
 
     @staticmethod
     def parse_review_time(value: Optional[str]) -> Optional[datetime]:
@@ -119,7 +124,13 @@ class SpacedRepetitionAlgorithm:
             last_review_date=last_review_date,
         )
         next_review = next_review + timedelta(days=add_days)
-        return SpacedRepetitionAlgorithm.format_review_time(next_review)
+        return SpacedRepetitionAlgorithm.serialize_review_time(next_review)
+
+    @staticmethod
+    def serialize_review_time(value: datetime) -> str:
+        if value.time() == datetime.min.time():
+            return SpacedRepetitionAlgorithm.format_review_date(value)
+        return SpacedRepetitionAlgorithm.format_review_time(value)
 
     @staticmethod
     def update_state(
@@ -179,7 +190,7 @@ class SpacedRepetitionAlgorithm:
             new_lapses = current_lapses
             state_name = "review"
 
-        next_review = now + SpacedRepetitionAlgorithm.days_to_interval(new_stability)
+        next_review = SpacedRepetitionAlgorithm._build_next_review_time(now, new_stability)
         next_retrievability = 1.0
 
         state.update({
@@ -194,6 +205,17 @@ class SpacedRepetitionAlgorithm:
             "state": "leech" if new_lapses >= 8 else state_name,
         })
         return state, next_review
+
+    @staticmethod
+    def _build_next_review_time(now: datetime, stability_days: float) -> datetime:
+        # Only the first two bootstrap steps keep exact clock time.
+        # Once the interval reaches day-level scheduling, align to whole dates.
+        if stability_days < 1:
+            return now + SpacedRepetitionAlgorithm.days_to_interval(stability_days)
+
+        whole_days = max(1, ceil(stability_days))
+        next_date = now.date() + timedelta(days=whole_days)
+        return datetime.combine(next_date, datetime.min.time())
 
     @staticmethod
     def calculate_master_level(review_history: List[Dict], fsrs_state: Optional[Dict] = None) -> float:

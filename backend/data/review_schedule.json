@@ -6,7 +6,7 @@
       "word": "hard",
       "review_count": 0,
       "review_dates": [],
-      "next_review_date": "2026-04-16 00:00:00",
+      "next_review_date": "2026-04-16",
       "master_level": 28.5,
       "last_review_date": null,
       "status": "pending",
@@ -26,7 +26,7 @@
       "word": "receive",
       "review_count": 0,
       "review_dates": [],
-      "next_review_date": "2026-04-16 00:00:00",
+      "next_review_date": "2026-04-16",
       "master_level": 28.5,
       "last_review_date": null,
       "status": "pending",
@@ -46,7 +46,7 @@
       "word": "manipulate",
       "review_count": 0,
       "review_dates": [],
-      "next_review_date": "2026-04-16 00:00:00",
+      "next_review_date": "2026-04-16",
       "master_level": 28.5,
       "last_review_date": null,
       "status": "pending",
@@ -79,14 +79,14 @@
           "trigger": "duplicate_add"
         }
       ],
-      "next_review_date": "2026-04-16 00:00:00",
-      "master_level": 28.2,
+      "next_review_date": "2026-04-16",
+      "master_level": 21.7,
       "last_review_date": "2026-04-15T21:25:37.411608",
       "status": "in_progress",
       "fsrs": {
         "stability": 0.20833333333333334,
         "difficulty": 5.0,
-        "retrievability": 0.9771,
+        "retrievability": 0.6541,
         "lapses": 0,
         "desired_retention": 0.9,
         "state": "review"
@@ -113,14 +113,14 @@
         }
       ],
       "next_review_date": "2026-04-16 00:46:05",
-      "master_level": 29.2,
+      "master_level": 19.7,
       "last_review_date": "2026-04-15T21:46:05.303326",
       "status": "in_progress",
       "lapse_count": 1,
       "fsrs": {
         "stability": 0.125,
         "difficulty": 5.65,
-        "retrievability": 0.9738,
+        "retrievability": 0.4988,
         "lapses": 1,
         "desired_retention": 0.9,
         "state": "relearning"
@@ -244,6 +244,39 @@
         "lapses": 0,
         "desired_retention": 0.9,
         "state": "learning"
+      }
+    },
+    {
+      "id": "review_c3f6aabb",
+      "word_id": "word_232bbce3",
+      "word": "timedemo",
+      "review_count": 2,
+      "review_dates": [
+        {
+          "proficiency": "familiar",
+          "review_date": "2026-04-16T17:34:25.680800",
+          "scheduled_date": "2026-04-16 20:34:25",
+          "trigger": "review"
+        },
+        {
+          "proficiency": "familiar",
+          "review_date": "2026-04-16T17:34:25.694058",
+          "scheduled_date": "2026-04-16 22:34:25",
+          "trigger": "review"
+        }
+      ],
+      "next_review_date": "2026-04-17",
+      "master_level": 35.6,
+      "last_review_date": "2026-04-16T17:34:25.694058",
+      "status": "in_progress",
+      "lapse_count": 0,
+      "fsrs": {
+        "stability": 1.0,
+        "difficulty": 5.3,
+        "retrievability": 1.0,
+        "lapses": 0,
+        "desired_retention": 0.9,
+        "state": "review"
       }
     }
   ]

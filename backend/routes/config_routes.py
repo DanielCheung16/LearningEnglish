@@ -36,7 +36,8 @@ def _get_default_config() -> dict:
             "smtp_server": "smtp.gmail.com",
             "smtp_port": 587,
             "sender_email": "",
-            "app_password": ""
+            "app_password": "",
+            "last_sent_date": ""
         },
         "review_settings": {
             "intervals": [1, 3, 7, 15, 30, 60]
