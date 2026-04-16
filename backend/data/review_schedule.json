@@ -1,0 +1,37 @@
+{
+  "review_records": [
+    {
+      "id": "review_da7ec570",
+      "word_id": "word_22f5e2b6",
+      "word": "hard",
+      "review_count": 0,
+      "review_dates": [],
+      "next_review_date": "2026-04-16",
+      "master_level": 0,
+      "last_review_date": null,
+      "status": "pending"
+    },
+    {
+      "id": "review_067571fa",
+      "word_id": "word_b9982494",
+      "word": "receive",
+      "review_count": 0,
+      "review_dates": [],
+      "next_review_date": "2026-04-16",
+      "master_level": 0,
+      "last_review_date": null,
+      "status": "pending"
+    },
+    {
+      "id": "review_5292faf6",
+      "word_id": "word_7fec456f",
+      "word": "manipulate",
+      "review_count": 0,
+      "review_dates": [],
+      "next_review_date": "2026-04-16",
+      "master_level": 0,
+      "last_review_date": null,
+      "status": "pending"
+    }
+  ]
+}

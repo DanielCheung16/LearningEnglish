@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created_date": "2026-04-15T17:39:08.966665",
+    "total_words": 3,
+    "last_sync": "2026-04-15T18:52:04.017825"
+  },
+  "words": [
+    {
+      "id": "word_22f5e2b6",
+      "word": "hard",
+      "phonetic": "",
+      "translations": [
+        {
+          "meaning": "困难",
+          "part_of_speech": "noun"
+        }
+      ],
+      "examples": [],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_b9982494",
+      "word": "receive",
+      "phonetic": "",
+      "translations": [
+        {
+          "meaning": "收到",
+          "part_of_speech": "noun"
+        }
+      ],
+      "examples": [],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_7fec456f",
+      "word": "manipulate",
+      "phonetic": "",
+      "translations": [
+        {
+          "meaning": "修改",
+          "part_of_speech": "noun"
+        }
+      ],
+      "examples": [],
+      "added_date": "2026-04-15"
+    }
+  ]
+}

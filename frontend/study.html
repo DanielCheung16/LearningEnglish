@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加单词 - 英文单词学习系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">主页</a></li>
+            <li><a href="/study" class="active">学习</a></li>
+            <li><a href="/review">复习</a></li>
+            <li><a href="/settings">设置</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="content">
+            <h1>添加新单词</h1>
+
+            <div id="message" style="display: none;"></div>
+
+            <form id="addWordForm" onsubmit="handleAddWord(event)">
+                <div class="form-group">
+                    <label for="word">英文单词 *</label>
+                    <input type="text" id="word" required placeholder="输入要学习的英文单词">
+                </div>
+
+                <div class="form-group">
+                    <label for="phonetic">音标</label>
+                    <input type="text" id="phonetic" placeholder="如: /ˈælɡərɪðəm/">
+                    <small style="color: #999;">系统会尽量自动补充常见单词的音标</small>
+                </div>
+
+                <div class="form-group">
+                    <label>中文释义 *</label>
+                    <div id="translationsContainer" style="margin-bottom: 10px;">
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" class="translation-input" placeholder="释义（如：算法）" required>
+                            <select class="pos-select" style="flex: 0 0 auto; width: 120px;">
+                                <option value="noun">名词</option>
+                                <option value="verb">动词</option>
+                                <option value="adjective">形容词</option>
+                                <option value="adverb">副词</option>
+                                <option value="other">其他</option>
+                            </select>
+                            <button type="button" onclick="removeTranslation(this)" class="btn btn-outline"
+                                style="flex: 0 0 auto; padding: 8px 12px; color: #f44336; border-color: #f44336;">删除</button>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addTranslation()" class="btn btn-outline"
+                        style="color: #4CAF50; border-color: #4CAF50; padding: 8px 12px;">添加释义</button>
+                </div>
+
+                <div class="form-group">
+                    <label>例句（工程领域）</label>
+                    <div id="examplesContainer" style="margin-bottom: 10px;">
+                        <div style="margin-bottom: 15px; padding: 15px; background-color: #f9f9f9; border-radius: 4px;">
+                            <input type="text" class="example-sentence"
+                                placeholder="英文例句"
+                                style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-family: monospace;">
+                            <input type="text" class="example-translation" placeholder="中文翻译"
+                                style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                            <select class="example-domain"
+                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 10px;">
+                                <option value="Computer Science">计算机科学</option>
+                                <option value="Electrical Engineering">电气工程</option>
+                                <option value="Network">网络</option>
+                                <option value="Database">数据库</option>
+                                <option value="Software Engineering">软件工程</option>
+                                <option value="Hardware">硬件</option>
+                                <option value="Other">其他</option>
+                            </select>
+                            <button type="button" onclick="removeExample(this)" class="btn btn-outline"
+                                style="color: #f44336; border-color: #f44336; padding: 6px 12px; font-size: 12px;">删除</button>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addExample()" class="btn btn-outline"
+                        style="color: #4CAF50; border-color: #4CAF50; padding: 8px 12px;">添加例句</button>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">保存单词</button>
+                    <button type="reset" class="btn btn-outline" onclick="resetWordForm()">清空表单</button>
+                    <a href="/review" class="btn btn-secondary">去复习</a>
+                </div>
+            </form>
+
+            <div style="margin-top: 50px; padding-top: 50px; border-top: 2px solid #eee;">
+                <h2>已添加的单词（最近20个）</h2>
+                <div id="audioVerificationStatus" style="margin: 12px 0; font-size: 12px; color: #666;"></div>
+                <div id="wordsListContainer" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        const studyAudioPlayer = new Audio();
+        studyAudioPlayer.preload = 'auto';
+
+        function addTranslation() {
+            const container = document.getElementById('translationsContainer');
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.gap = '10px';
+            div.style.marginBottom = '10px';
+            div.innerHTML = `
+                <input type="text" class="translation-input" placeholder="释义" required>
+                <select class="pos-select" style="flex: 0 0 auto; width: 120px;">
+                    <option value="noun">名词</option>
+                    <option value="verb">动词</option>
+                    <option value="adjective">形容词</option>
+                    <option value="adverb">副词</option>
+                    <option value="other">其他</option>
+                </select>
+                <button type="button" onclick="removeTranslation(this)" class="btn btn-outline" style="flex: 0 0 auto; padding: 8px 12px; color: #f44336; border-color: #f44336;">删除</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeTranslation(btn) {
+            btn.parentElement.remove();
+        }
+
+        function addExample() {
+            const container = document.getElementById('examplesContainer');
+            const div = document.createElement('div');
+            div.style.marginBottom = '15px';
+            div.style.padding = '15px';
+            div.style.backgroundColor = '#f9f9f9';
+            div.style.borderRadius = '4px';
+            div.innerHTML = `
+                <input type="text" class="example-sentence" placeholder="英文例句" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-family: monospace;">
+                <input type="text" class="example-translation" placeholder="中文翻译" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                <select class="example-domain" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 10px;">
+                    <option value="Computer Science">计算机科学</option>
+                    <option value="Electrical Engineering">电气工程</option>
+                    <option value="Network">网络</option>
+                    <option value="Database">数据库</option>
+                    <option value="Software Engineering">软件工程</option>
+                    <option value="Hardware">硬件</option>
+                    <option value="Other">其他</option>
+                </select>
+                <button type="button" onclick="removeExample(this)" class="btn btn-outline" style="color: #f44336; border-color: #f44336; padding: 6px 12px; font-size: 12px;">删除</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeExample(btn) {
+            btn.parentElement.remove();
+        }
+
+        function showMessage(text, type) {
+            const div = document.getElementById('message');
+            div.className = `alert alert-${type}`;
+            div.textContent = text;
+            div.style.display = 'block';
+            setTimeout(() => {
+                div.style.display = 'none';
+            }, 5000);
+        }
+
+        function resetWordForm() {
+            document.getElementById('translationsContainer').innerHTML = `
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" class="translation-input" placeholder="释义（如：算法）" required>
+                    <select class="pos-select" style="flex: 0 0 auto; width: 120px;">
+                        <option value="noun">名词</option>
+                        <option value="verb">动词</option>
+                        <option value="adjective">形容词</option>
+                        <option value="adverb">副词</option>
+                        <option value="other">其他</option>
+                    </select>
+                    <button type="button" onclick="removeTranslation(this)" class="btn btn-outline" style="flex: 0 0 auto; padding: 8px 12px; color: #f44336; border-color: #f44336;">删除</button>
+                </div>
+            `;
+            document.getElementById('examplesContainer').innerHTML = `
+                <div style="margin-bottom: 15px; padding: 15px; background-color: #f9f9f9; border-radius: 4px;">
+                    <input type="text" class="example-sentence" placeholder="英文例句" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-family: monospace;">
+                    <input type="text" class="example-translation" placeholder="中文翻译" style="width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                    <select class="example-domain" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 10px;">
+                        <option value="Computer Science">计算机科学</option>
+                        <option value="Electrical Engineering">电气工程</option>
+                        <option value="Network">网络</option>
+                        <option value="Database">数据库</option>
+                        <option value="Software Engineering">软件工程</option>
+                        <option value="Hardware">硬件</option>
+                        <option value="Other">其他</option>
+                    </select>
+                    <button type="button" onclick="removeExample(this)" class="btn btn-outline" style="color: #f44336; border-color: #f44336; padding: 6px 12px; font-size: 12px;">删除</button>
+                </div>
+            `;
+        }
+
+        function collectTranslations() {
+            const translationInputs = document.querySelectorAll('.translation-input');
+            const posSelects = document.querySelectorAll('.pos-select');
+            const translations = [];
+
+            translationInputs.forEach((input, index) => {
+                if (input.value.trim()) {
+                    translations.push({
+                        meaning: input.value.trim(),
+                        part_of_speech: posSelects[index].value
+                    });
+                }
+            });
+
+            return translations;
+        }
+
+        function collectExamples() {
+            const sentences = document.querySelectorAll('.example-sentence');
+            const translationTexts = document.querySelectorAll('.example-translation');
+            const domains = document.querySelectorAll('.example-domain');
+            const examples = [];
+
+            sentences.forEach((sentence, index) => {
+                if (sentence.value.trim() && translationTexts[index].value.trim()) {
+                    examples.push({
+                        sentence: sentence.value.trim(),
+                        translation: translationTexts[index].value.trim(),
+                        domain: domains[index].value
+                    });
+                }
+            });
+
+            return examples;
+        }
+
+        async function speakWithBrowser(word) {
+            if (!('speechSynthesis' in window)) {
+                return false;
+            }
+
+            try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+
+                const voices = window.speechSynthesis.getVoices();
+                const englishVoice = voices.find((voice) => voice.lang && voice.lang.toLowerCase().startsWith('en'));
+                if (englishVoice) {
+                    utterance.voice = englishVoice;
+                }
+
+                window.speechSynthesis.speak(utterance);
+                return true;
+            } catch (_error) {
+                return false;
+            }
+        }
+
+        async function playAudioFallback(word) {
+            const result = await APIClient.getAudioInfo(word);
+            if (!result.success) {
+                throw new Error(result.error || '获取音频失败');
+            }
+
+            const data = result.data.data || {};
+            const audioUrl = data.audio_url_us || data.audio_url || data.audio_url_uk;
+            if (!audioUrl) {
+                throw new Error('没有可用的发音链接');
+            }
+
+            studyAudioPlayer.src = audioUrl;
+            studyAudioPlayer.load();
+            await studyAudioPlayer.play();
+        }
+
+        async function playWordAudio(word) {
+            if (!word) {
+                return;
+            }
+
+            await verifyAudioConnectivity(word);
+
+            const browserSpoken = await speakWithBrowser(word);
+            if (browserSpoken) {
+                return;
+            }
+
+            try {
+                await playAudioFallback(word);
+            } catch (error) {
+                showMessage('播放发音失败: ' + error.message, 'error');
+            }
+        }
+
+        async function verifyAudioConnectivity(word) {
+            const statusEl = document.getElementById('audioVerificationStatus');
+            if (!statusEl) {
+                return;
+            }
+
+            statusEl.textContent = 'Verifying...';
+            statusEl.style.color = '#666';
+
+            const result = await APIClient.verifyAudioConnectivity(word);
+            if (result.success && result.data.data) {
+                const data = result.data.data;
+                if (data.reachable) {
+                    statusEl.textContent = `Google TTS verification: reachable (${data.status_code})`;
+                    statusEl.style.color = '#2e7d32';
+                } else {
+                    statusEl.textContent = `Google TTS verification: unreachable (${data.message})`;
+                    statusEl.style.color = '#c62828';
+                }
+            } else {
+                statusEl.textContent = `Google TTS verification: failed (${result.error || 'unknown error'})`;
+                statusEl.style.color = '#c62828';
+            }
+        }
+
+        async function handleAddWord(event) {
+            event.preventDefault();
+
+            try {
+                const word = document.getElementById('word').value.trim();
+                const phonetic = document.getElementById('phonetic').value.trim();
+                const translations = collectTranslations();
+                const examples = collectExamples();
+
+                if (!translations.length) {
+                    showMessage('请至少添加一个释义', 'error');
+                    return;
+                }
+
+                const result = await APIClient.addWord({
+                    word,
+                    phonetic,
+                    translations,
+                    examples
+                });
+
+                if (result.success) {
+                    showMessage(`单词 "${word}" 已添加成功`, 'success');
+                    document.getElementById('addWordForm').reset();
+                    resetWordForm();
+                    loadWordsList();
+                } else {
+                    showMessage('添加单词失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('添加单词失败: ' + error.message, 'error');
+            }
+        }
+
+        async function handleDeleteWord(wordId, wordText) {
+            const confirmed = window.confirm(`确定删除单词 "${wordText}" 吗？这也会删除它的复习记录。`);
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const result = await APIClient.deleteWord(wordId);
+                if (result.success) {
+                    showMessage(`已删除单词 "${wordText}"`, 'success');
+                    loadWordsList();
+                } else {
+                    showMessage('删除单词失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('删除单词失败: ' + error.message, 'error');
+            }
+        }
+
+        function renderWordCard(word) {
+            const safeWord = encodeURIComponent(word.word || '');
+            const translationsHtml = (word.translations || [])
+                .map((translation) => `<p style="margin: 5px 0; color: #666;">• ${translation.meaning}</p>`)
+                .join('');
+
+            return `
+                <div class="word-card">
+                    <div class="word-header">
+                        <div>
+                            <div class="word-text">${word.word || ''}</div>
+                            <div class="word-phonetic">${word.phonetic || ''}</div>
+                        </div>
+                        <div>
+                            <span style="color: #999; font-size: 12px;">添加于 ${word.added_date || ''}</span>
+                        </div>
+                    </div>
+                    ${translationsHtml}
+                    <div style="margin-top: 12px;">
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            onclick="playWordAudio(decodeURIComponent('${safeWord}'))"
+                            style="padding: 6px 12px; font-size: 12px; margin-right: 8px;"
+                        >
+                            播放发音
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            onclick="handleDeleteWord('${word.id}', decodeURIComponent('${safeWord}'))"
+                            style="color: #f44336; border-color: #f44336; padding: 6px 12px; font-size: 12px;"
+                        >
+                            删除单词
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadWordsList() {
+            try {
+                const result = await APIClient.getAllWords();
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+
+                const words = result.data.data.slice(-20).reverse();
+                const container = document.getElementById('wordsListContainer');
+
+                if (!words.length) {
+                    container.innerHTML = '<div class="empty-state"><p>还没有添加任何单词</p></div>';
+                    return;
+                }
+
+                container.innerHTML = words.map(renderWordCard).join('');
+            } catch (error) {
+                console.error('加载单词列表失败:', error);
+                showMessage('加载单词列表失败: ' + error.message, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
+            loadWordsList();
+        });
+    </script>
+</body>
+
+</html>

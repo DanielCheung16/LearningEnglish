@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文单词学习系统 - 主仪表板</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav>
+        <ul>
+            <li><a href="/" class="active">📊 主页</a></li>
+            <li><a href="/study">📚 学习</a></li>
+            <li><a href="/review">✏️ 复习</a></li>
+            <li><a href="/settings">⚙️ 设置</a></li>
+        </ul>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <div class="content">
+            <h1>📊 学习仪表板</h1>
+
+            <!-- 欢迎信息 -->
+            <div style="margin-bottom: 30px;">
+                <p style="font-size: 16px; color: #666;">
+                    欢迎来到英文单词学习系统！使用艾宾浩斯遗忘曲线，科学高效地背单词。
+                </p>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div style="font-size: 24px;">📚</div>
+                    <div class="stat-number" id="totalWords">0</div>
+                    <div class="stat-label">总词数</div>
+                </div>
+
+                <div class="stat-card secondary">
+                    <div style="font-size: 24px;">✅</div>
+                    <div class="stat-number" id="masteredWords">0</div>
+                    <div class="stat-label">已掌握</div>
+                </div>
+
+                <div class="stat-card warning">
+                    <div style="font-size: 24px;">📋</div>
+                    <div class="stat-number" id="todayReview">0</div>
+                    <div class="stat-label">今日复习</div>
+                </div>
+
+                <div class="stat-card">
+                    <div style="font-size: 24px;">📈</div>
+                    <div class="stat-number" id="progressPercentage">0%</div>
+                    <div class="stat-label">学习进度</div>
+                </div>
+            </div>
+
+            <!-- 进度条 -->
+            <div style="margin: 30px 0;">
+                <h2>总体学习进度</h2>
+                <div
+                    style="background-color: #f0f0f0; border-radius: 10px; height: 30px; overflow: hidden; margin-top: 10px;">
+                    <div id="progressBar"
+                        style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.5s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速操作 -->
+            <div style="margin: 40px 0;">
+                <h2>快速操作</h2>
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+                    <a href="/study" class="btn btn-primary"
+                        style="padding: 20px; text-align: center; font-size: 16px;">
+                        ➕ 添加新单词
+                    </a>
+                    <a href="/review" class="btn btn-secondary"
+                        style="padding: 20px; text-align: center; font-size: 16px;">
+                        ✏️ 开始复习
+                    </a>
+                    <a href="/settings" class="btn btn-outline"
+                        style="padding: 20px; text-align: center; font-size: 16px; border-color: #4CAF50; color: #4CAF50;">
+                        ⚙️ 配置提醒
+                    </a>
+                </div>
+            </div>
+
+            <!-- 最近添加的单词 -->
+            <div style="margin-top: 40px;">
+                <h2>最近添加的单词</h2>
+                <div id="recentWordsContainer" style="margin-top: 20px;">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📖</div>
+                        <div class="empty-state-title">还没有添加任何单词</div>
+                        <p>点击 <strong>添加新单词</strong> 开始学习</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 今日待复习 -->
+            <div style="margin-top: 40px;">
+                <h2>今日待复习</h2>
+                <div id="todayReviewContainer" style="margin-top: 20px;">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎉</div>
+                        <div class="empty-state-title">今日无待复习单词</div>
+                        <p>继续加油，坚持学习！</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提示信息 -->
+            <div
+                style="background-color: #f0f8f0; border: 1px solid #4CAF50; border-radius: 8px; padding: 20px; margin-top: 40px;">
+                <h3>💡 学习建议</h3>
+                <ul style="margin: 10px 0 0 20px; color: #666;">
+                    <li>坚持使用艾宾浩斯复习法，效果会明显提升</li>
+                    <li>建议每天固定时间复习，养成习惯</li>
+                    <li>在配置中设置每日提醒，不会遗漏复习</li>
+                    <li>重点学习专业领域的词汇，提升行业竞争力</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            try {
+                // 获取统计信息
+                const statsResult = await APIClient.getReviewStats();
+                if (statsResult.success) {
+                    const stats = statsResult.data.data;
+                    document.getElementById('totalWords').textContent = stats.total_words;
+                    document.getElementById('masteredWords').textContent = stats.mastered_count;
+                    document.getElementById('todayReview').textContent = stats.today_review_count;
+                    document.getElementById('progressPercentage').textContent = stats.progress_percentage + '%';
+
+                    // 更新进度条
+                    const progressBar = document.getElementById('progressBar');
+                    progressBar.style.width = stats.progress_percentage + '%';
+                    progressBar.textContent = stats.progress_percentage + '%';
+                }
+
+                // 获取所有单词（显示最近5个）
+                const wordsResult = await APIClient.getAllWords();
+                if (wordsResult.success && wordsResult.data.data.length > 0) {
+                    const words = wordsResult.data.data.slice(-5).reverse();
+                    const container = document.getElementById('recentWordsContainer');
+                    container.innerHTML = '';
+
+                    words.forEach(word => {
+                        const meaning = word.translations[0]?.meaning || '';
+                        container.innerHTML += `
+                            <div class="word-card">
+                                <div class="word-header">
+                                    <div>
+                                        <div class="word-text">${word.word}</div>
+                                        <div class="word-phonetic">${word.phonetic}</div>
+                                    </div>
+                                    <span style="color: #999;">${meaning}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 获取今日复习列表
+                const reviewResult = await APIClient.getTodayReviewList();
+                if (reviewResult.success && reviewResult.data.data.length > 0) {
+                    const reviews = reviewResult.data.data.slice(0, 5);
+                    const container = document.getElementById('todayReviewContainer');
+                    container.innerHTML = '';
+
+                    reviews.forEach(review => {
+                        const word = review.word_detail || {};
+                        const meaning = word.translations?.[0]?.meaning || '';
+                        container.innerHTML += `
+                            <div class="word-card">
+                                <div class="word-header">
+                                    <div>
+                                        <div class="word-text">${word.word}</div>
+                                        <div class="word-phonetic">${word.phonetic}</div>
+                                    </div>
+                                    <span style="color: #999;">第${review.review_count + 1}次复习</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>

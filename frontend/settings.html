@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 - 英文单词学习系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <!-- 导航栏 -->
+    <nav>
+        <ul>
+            <li><a href="/">📊 主页</a></li>
+            <li><a href="/study">📚 学习</a></li>
+            <li><a href="/review">✏️ 复习</a></li>
+            <li><a href="/settings" class="active">⚙️ 设置</a></li>
+        </ul>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <div class="content">
+            <h1>⚙️ 系统设置</h1>
+
+            <!-- 提示信息 -->
+            <div id="message" style="display: none;"></div>
+
+            <!-- 用户信息设置 -->
+            <div style="margin-bottom: 40px;">
+                <h2>👤 用户信息</h2>
+                <form id="userInfoForm">
+                    <div class="form-group">
+                        <label for="userName">用户名</label>
+                        <input type="text" id="userName" placeholder="输入你的名字">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userEmail">邮箱地址</label>
+                        <input type="email" id="userEmail" placeholder="输入你的邮箱">
+                        <small style="color: #999;">用于接收复习提醒</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">💾 保存用户信息</button>
+                </form>
+            </div>
+
+            <!-- 邮件提醒设置 -->
+            <div
+                style="margin-bottom: 40px; padding: 20px; background-color: #f9f9f9; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                <h2>📧 邮件提醒设置</h2>
+
+                <div class="form-group">
+                    <label>启用每日复习提醒</label>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+                        <label class="switch">
+                            <input type="checkbox" id="enableReminder">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="reminderStatus" style="color: #999;">未启用</span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="reminderSettingsContainer" style="display: none;">
+                    <label for="reminderTime">⏰ 提醒时间</label>
+                    <input type="time" id="reminderTime" value="09:00">
+                    <button type="button" onclick="updateReminderTime()" class="btn btn-primary"
+                        style="margin-top: 10px;">✅ 更新提醒时间</button>
+                </div>
+            </div>
+
+            <!-- SMTP配置 -->
+            <div style="margin-bottom: 40px;">
+                <h2>🔧 SMTP邮件服务器配置</h2>
+                <p style="color: #666; margin-bottom: 20px;">配置邮件服务器以接收复习提醒</p>
+
+                <form id="smtpForm">
+                    <div class="form-group">
+                        <label for="smtpServer">SMTP服务器</label>
+                        <input type="text" id="smtpServer" value="smtp.gmail.com" placeholder="如: smtp.gmail.com">
+                        <small style="color: #999;">常见服务: Gmail (smtp.gmail.com) | Outlook (smtp-mail.outlook.com) | QQ
+                            (smtp.qq.com)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="smtpPort">SMTP端口</label>
+                        <input type="number" id="smtpPort" value="587" placeholder="587或465">
+                        <small style="color: #999;">通常为 587 (TLS) 或 465 (SSL)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="senderEmail">发件邮箱</label>
+                        <input type="email" id="senderEmail" placeholder="你的邮箱地址">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="appPassword">应用专用密码</label>
+                        <input type="password" id="appPassword" placeholder="应用密码（不是邮箱密码）">
+                        <small style="color: #999;">
+                            ⚠️ 重要：不要使用真实密码！<br>
+                            对于Gmail：访问 <a href="https://myaccount.google.com/apppasswords"
+                                target="_blank">https://myaccount.google.com/apppasswords</a> 生成专用密码
+                        </small>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" onclick="testEmailConfig()" class="btn btn-secondary">🧪 测试邮件配置</button>
+                        <button type="submit" class="btn btn-primary">💾 保存配置</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 关于系统 -->
+            <div style="margin-top: 50px; padding: 20px; background-color: #f0f8f0; border-radius: 8px;">
+                <h2>ℹ️ 关于系统</h2>
+                <ul style="margin: 10px 0 0 20px; color: #666;">
+                    <li><strong>系统名称：</strong>英文单词学习系统</li>
+                    <li><strong>版本：</strong>1.0.0</li>
+                    <li><strong>学习方法：</strong>艾宾浩斯遗忘曲线 + 间隔重复</li>
+                    <li><strong>专注领域：</strong>Computer Engineering & Electrical Engineering</li>
+                    <li><strong>特色功能：</strong>
+                        <ul style="margin-top: 5px;">
+                            <li>科学的复习间隔算法</li>
+                            <li>自动邮件提醒</li>
+                            <li>专业领域词汇库</li>
+                            <li>学习进度追踪</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSettings();
+        });
+
+        async function loadSettings() {
+            try {
+                const result = await APIClient.getConfig();
+                if (result.success) {
+                    const config = result.data.data;
+
+                    // 加载用户信息
+                    document.getElementById('userName').value = config.user_info?.name || '';
+                    document.getElementById('userEmail').value = config.user_info?.email || '';
+
+                    // 加载邮件设置
+                    const enableReminder = config.email_settings?.enable_reminders || false;
+                    document.getElementById('enableReminder').checked = enableReminder;
+                    document.getElementById('reminderSettingsContainer').style.display = enableReminder ? 'block' : 'none';
+                    document.getElementById('reminderStatus').textContent = enableReminder ? '✅ 已启用' : '❌ 未启用';
+
+                    document.getElementById('reminderTime').value = config.email_settings?.reminder_time || '09:00';
+
+                    // 加载SMTP配置
+                    document.getElementById('smtpServer').value = config.email_settings?.smtp_server || 'smtp.gmail.com';
+                    document.getElementById('smtpPort').value = config.email_settings?.smtp_port || 587;
+                    document.getElementById('senderEmail').value = config.email_settings?.sender_email || '';
+                }
+            } catch (error) {
+                console.error('加载设置失败:', error);
+            }
+        }
+
+        // 用户信息表单提交
+        document.getElementById('userInfoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            try {
+                const result = await APIClient.updateConfig({
+                    user_info: {
+                        name: document.getElementById('userName').value,
+                        email: document.getElementById('userEmail').value
+                    }
+                });
+
+                if (result.success) {
+                    showMessage('✅ 用户信息已保存', 'success');
+                } else {
+                    showMessage('❌ 保存失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ 错误: ' + error.message, 'error');
+            }
+        });
+
+        // 提醒开关
+        document.getElementById('enableReminder').addEventListener('change', async (e) => {
+            const enabled = e.target.checked;
+            document.getElementById('reminderSettingsContainer').style.display = enabled ? 'block' : 'none';
+
+            try {
+                const result = await APIClient.toggleReminder(enabled);
+                document.getElementById('reminderStatus').textContent = enabled ? '✅ 已启用' : '❌ 未启用';
+                showMessage(result.data.message, 'success');
+            } catch (error) {
+                showMessage('❌ 切换失败: ' + error.message, 'error');
+            }
+        });
+
+        // 更新提醒时间
+        async function updateReminderTime() {
+            const time = document.getElementById('reminderTime').value;
+
+            try {
+                const result = await APIClient.updateReminderTime(time);
+                if (result.success) {
+                    showMessage('✅ ' + result.data.message, 'success');
+                } else {
+                    showMessage('❌ 更新失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ 错误: ' + error.message, 'error');
+            }
+        }
+
+        // SMTP表单提交
+        document.getElementById('smtpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            try {
+                const config = {
+                    email_settings: {
+                        smtp_server: document.getElementById('smtpServer').value,
+                        smtp_port: parseInt(document.getElementById('smtpPort').value),
+                        sender_email: document.getElementById('senderEmail').value,
+                        app_password: document.getElementById('appPassword').value
+                    }
+                };
+
+                const result = await APIClient.updateConfig(config);
+                if (result.success) {
+                    showMessage('✅ 邮件配置已保存', 'success');
+                } else {
+                    showMessage('❌ 保存失败: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ 错误: ' + error.message, 'error');
+            }
+        });
+
+        // 测试邮件配置
+        async function testEmailConfig() {
+            try {
+                const result = await APIClient.testEmailConfig(
+                    document.getElementById('smtpServer').value,
+                    parseInt(document.getElementById('smtpPort').value),
+                    document.getElementById('senderEmail').value,
+                    document.getElementById('appPassword').value
+                );
+
+                if (result.success && result.data.success) {
+                    showMessage('✅ ' + result.data.message, 'success');
+                } else {
+                    showMessage('❌ ' + (result.data.error || result.error || '测试失败'), 'error');
+                }
+            } catch (error) {
+                showMessage('❌ 测试失败: ' + error.message, 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const div = document.getElementById('message');
+            div.className = `alert alert-${type}`;
+            div.textContent = text;
+            div.style.display = 'block';
+            setTimeout(() => {
+                div.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html>

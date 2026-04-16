@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>复习 - 英文单词学习系统</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">主页</a></li>
+            <li><a href="/study">学习</a></li>
+            <li><a href="/review" class="active">复习</a></li>
+            <li><a href="/settings">设置</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="content">
+            <h1>单词复习</h1>
+
+            <div style="background-color: #f0f8f0; padding: 15px; border-radius: 4px; margin: 20px 0; display: none;"
+                id="progressInfo">
+                <p style="margin: 0;">已完成 <strong id="completedCount">0</strong> / <strong id="totalCount">0</strong> 个单词</p>
+            </div>
+
+            <div id="loadingState" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">🎉</div>
+                <div class="empty-state-title">今日暂无待复习单词</div>
+                <p>今天的复习任务已经完成，或者还没有到复习时间。</p>
+                <a href="/study" class="btn btn-primary" style="margin-top: 20px;">添加新单词</a>
+            </div>
+
+            <div id="reviewContainer" style="display: none;">
+                <div class="review-card">
+                    <div class="word" id="reviewWord"></div>
+                    <div class="phonetic" id="reviewPhonetic"></div>
+
+                    <button id="playAudioBtn" class="btn btn-secondary" style="margin: 15px 0;">播放发音</button>
+                    <div id="audioVerificationStatus" style="margin-top: -5px; margin-bottom: 10px; font-size: 12px; color: #666;"></div>
+                    <audio id="audioPlayer" style="display: none;"></audio>
+
+                    <div class="translations" id="reviewTranslations"></div>
+
+                    <div class="examples" id="reviewExamples" style="display: none;">
+                        <h4 style="margin-bottom: 10px;">例句</h4>
+                        <div id="examplesContent"></div>
+                    </div>
+
+                    <div class="proficiency-buttons">
+                        <button onclick="submitReview('unfamiliar')" class="proficiency-btn unfamiliar">不熟悉</button>
+                        <button onclick="submitReview('familiar')" class="proficiency-btn familiar">熟悉</button>
+                        <button onclick="submitReview('practiced')" class="proficiency-btn practiced">练习中</button>
+                        <button onclick="submitReview('mastered')" class="proficiency-btn mastered">已掌握</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background-color: #f5f5f5; border-radius: 4px;">
+                    <h3>复习进度</h3>
+                    <div style="margin-top: 10px;">
+                        <div>已复习: <strong id="reviewedCount">0</strong> 个</div>
+                        <div>剩余: <strong id="remainingCount">0</strong> 个</div>
+                        <div style="margin-top: 10px;">
+                            <div style="background-color: #ddd; border-radius: 10px; height: 20px; overflow: hidden;">
+                                <div id="progressBar"
+                                    style="background-color: #4CAF50; height: 100%; width: 0%; transition: width 0.3s;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        let currentReviewList = [];
+        let currentIndex = 0;
+
+        function getReviewAudioPlayer() {
+            return document.getElementById('audioPlayer');
+        }
+
+        async function speakWithBrowser(word) {
+            if (!('speechSynthesis' in window)) {
+                return false;
+            }
+
+            try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+
+                const voices = window.speechSynthesis.getVoices();
+                const englishVoice = voices.find((voice) => voice.lang && voice.lang.toLowerCase().startsWith('en'));
+                if (englishVoice) {
+                    utterance.voice = englishVoice;
+                }
+
+                window.speechSynthesis.speak(utterance);
+                return true;
+            } catch (_error) {
+                return false;
+            }
+        }
+
+        async function playAudioFallback(word) {
+            const result = await APIClient.getAudioInfo(word);
+            if (!result.success) {
+                throw new Error(result.error || '获取音频失败');
+            }
+
+            const data = result.data.data || {};
+            const audioUrl = data.audio_url_us || data.audio_url || data.audio_url_uk;
+            if (!audioUrl) {
+                throw new Error('没有可用的发音链接');
+            }
+
+            const audioPlayer = getReviewAudioPlayer();
+            audioPlayer.src = audioUrl;
+            audioPlayer.load();
+            await audioPlayer.play();
+        }
+
+        async function playWordAudio(word) {
+            if (!word) {
+                return;
+            }
+
+            await verifyAudioConnectivity(word);
+
+            const browserSpoken = await speakWithBrowser(word);
+            if (browserSpoken) {
+                return;
+            }
+
+            try {
+                await playAudioFallback(word);
+            } catch (error) {
+                alert('播放发音失败: ' + error.message);
+            }
+        }
+
+        async function verifyAudioConnectivity(word) {
+            const statusEl = document.getElementById('audioVerificationStatus');
+            if (!statusEl) {
+                return;
+            }
+
+            statusEl.textContent = 'Verifying...';
+            statusEl.style.color = '#666';
+
+            const result = await APIClient.verifyAudioConnectivity(word);
+            if (result.success && result.data.data) {
+                const data = result.data.data;
+                if (data.reachable) {
+                    statusEl.textContent = `Google TTS verification: reachable (${data.status_code})`;
+                    statusEl.style.color = '#2e7d32';
+                } else {
+                    statusEl.textContent = `Google TTS verification: unreachable (${data.message})`;
+                    statusEl.style.color = '#c62828';
+                }
+            } else {
+                statusEl.textContent = `Google TTS verification: failed (${result.error || 'unknown error'})`;
+                statusEl.style.color = '#c62828';
+            }
+        }
+
+        async function loadReviewList() {
+            const loadingState = document.getElementById('loadingState');
+            loadingState.style.display = 'block';
+
+            try {
+                const result = await APIClient.getTodayReviewList();
+                const reviews = result.success ? result.data.data : [];
+
+                if (reviews.length > 0) {
+                    currentReviewList = reviews;
+                    currentIndex = 0;
+
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'none';
+                    document.getElementById('reviewContainer').style.display = 'block';
+                    document.getElementById('progressInfo').style.display = 'block';
+                    document.getElementById('totalCount').textContent = currentReviewList.length;
+
+                    displayCurrentWord();
+                } else {
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('reviewContainer').style.display = 'none';
+                    document.getElementById('emptyState').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('loadingState').style.display = 'none';
+                alert('加载复习列表失败: ' + error.message);
+            }
+        }
+
+        function displayCurrentWord() {
+            if (currentIndex >= currentReviewList.length) {
+                showCompletionMessage();
+                return;
+            }
+
+            const review = currentReviewList[currentIndex];
+            const word = review.word_detail || {};
+
+            document.getElementById('reviewWord').textContent = word.word || '';
+            document.getElementById('reviewPhonetic').textContent = word.phonetic || '';
+
+            const translationsHtml = (word.translations || [])
+                .map((translation) => `<p>• ${translation.meaning} <small>(${translation.part_of_speech})</small></p>`)
+                .join('');
+            document.getElementById('reviewTranslations').innerHTML = translationsHtml;
+
+            if (word.examples && word.examples.length > 0) {
+                const examplesHtml = word.examples.map((example) => `
+                    <div class="example-item">
+                        <div class="example-sentence">${example.sentence}</div>
+                        <div class="example-translation">${example.translation}</div>
+                        <div class="example-domain">${example.domain}</div>
+                    </div>
+                `).join('');
+                document.getElementById('examplesContent').innerHTML = examplesHtml;
+                document.getElementById('reviewExamples').style.display = 'block';
+            } else {
+                document.getElementById('examplesContent').innerHTML = '';
+                document.getElementById('reviewExamples').style.display = 'none';
+            }
+
+            document.getElementById('completedCount').textContent = currentIndex;
+            document.getElementById('reviewedCount').textContent = currentIndex;
+            document.getElementById('remainingCount').textContent = currentReviewList.length - currentIndex - 1;
+            document.getElementById('progressBar').style.width = ((currentIndex / currentReviewList.length) * 100) + '%';
+
+            document.getElementById('playAudioBtn').onclick = () => playWordAudio(word.word);
+        }
+
+        async function submitReview(proficiencyLevel) {
+            const review = currentReviewList[currentIndex];
+
+            try {
+                const result = await APIClient.submitReview(review.word_id, proficiencyLevel);
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
+
+                currentIndex += 1;
+                setTimeout(() => {
+                    displayCurrentWord();
+                }, 300);
+            } catch (error) {
+                alert('提交失败: ' + error.message);
+            }
+        }
+
+        function showCompletionMessage() {
+            document.getElementById('reviewContainer').style.display = 'none';
+            document.getElementById('emptyState').innerHTML = `
+                <div class="empty-state-icon">🎉</div>
+                <div class="empty-state-title">今日复习完成</div>
+                <p>你已经完成今天的所有复习。</p>
+                <p style="font-size: 14px; color: #999; margin-top: 10px;">保持每天复习，效果会更稳定。</p>
+                <div style="margin-top: 20px;">
+                    <button onclick="location.href='/'" class="btn btn-primary">回到首页</button>
+                </div>
+            `;
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
+            await loadReviewList();
+        });
+    </script>
+</body>
+
+</html>
