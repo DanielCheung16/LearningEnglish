@@ -86,7 +86,7 @@
       "fsrs": {
         "stability": 0.20833333333333334,
         "difficulty": 5.0,
-        "retrievability": 0.9802,
+        "retrievability": 0.9771,
         "lapses": 0,
         "desired_retention": 0.9,
         "state": "review"
@@ -113,14 +113,14 @@
         }
       ],
       "next_review_date": "2026-04-16 00:46:05",
-      "master_level": 29.3,
+      "master_level": 29.2,
       "last_review_date": "2026-04-15T21:46:05.303326",
       "status": "in_progress",
       "lapse_count": 1,
       "fsrs": {
         "stability": 0.125,
         "difficulty": 5.65,
-        "retrievability": 0.979,
+        "retrievability": 0.9738,
         "lapses": 1,
         "desired_retention": 0.9,
         "state": "relearning"
