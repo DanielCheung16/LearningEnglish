@@ -2,6 +2,7 @@ import urllib.parse
 from typing import Dict, Optional
 
 import requests
+from backend.modules.dictionary_manager import DictionaryManager
 
 
 class AudioManager:
@@ -90,12 +91,14 @@ class AudioManager:
 
     @staticmethod
     def get_phonetic_and_audio(word: str) -> Dict[str, Optional[str]]:
-        phonetic = AudioManager._extract_phonetic_from_google(word) or ""
+        dictionary_data = DictionaryManager.lookup_word(word) or {}
+        phonetic = dictionary_data.get("phonetic") or AudioManager._extract_phonetic_from_google(word) or ""
+        audio_url = dictionary_data.get("audio_url") or AudioManager.get_audio_url(word, "en")
         return {
             "word": word,
             "phonetic": phonetic,
-            "audio_url": AudioManager.get_audio_url(word, "en"),
-            "audio_url_uk": AudioManager.get_audio_url(word, "en"),
+            "audio_url": audio_url,
+            "audio_url_uk": audio_url,
             "success": True,
         }
 
@@ -136,19 +139,27 @@ class AudioManager:
 
     @staticmethod
     def get_pronunciation_info(word: str) -> Dict[str, str]:
-        phonetic = AudioManager._extract_phonetic_from_google(word) or ""
+        dictionary_data = DictionaryManager.lookup_word(word) or {}
+        phonetic = dictionary_data.get("phonetic") or AudioManager._extract_phonetic_from_google(word) or ""
+        audio_url = dictionary_data.get("audio_url") or AudioManager.get_audio_url(word, "en")
+        source = "Free Dictionary API" if dictionary_data.get("audio_url") else "Google TTS fallback"
         return {
             "word": word,
             "phonetic_us": phonetic,
             "phonetic_uk": phonetic,
-            "audio_url_us": AudioManager.get_audio_url(word, "en"),
-            "audio_url_uk": AudioManager.get_audio_url(word, "en"),
-            "description": "US pronunciation",
+            "audio_url_us": audio_url,
+            "audio_url_uk": audio_url,
+            "description": source,
         }
 
     @staticmethod
-    def verify_google_tts(word: str = "hello", timeout: int = 8) -> Dict[str, object]:
-        audio_url = AudioManager.get_audio_url(word, "en")
+    def verify_audio_source(word: str = "hello", timeout: int = 8) -> Dict[str, object]:
+        pronunciation = AudioManager.get_pronunciation_info(word)
+        audio_url = (
+            pronunciation.get("audio_url_us")
+            or pronunciation.get("audio_url_uk")
+            or AudioManager.get_audio_url(word, "en")
+        )
         headers = {
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -174,6 +185,7 @@ class AudioManager:
                 "content_type": content_type,
                 "audio_url": audio_url,
                 "word": word,
+                "source": pronunciation.get("description", "Audio source"),
                 "message": "reachable" if reachable else "unexpected response",
             }
         except Exception as exc:
@@ -183,5 +195,6 @@ class AudioManager:
                 "content_type": "",
                 "audio_url": audio_url,
                 "word": word,
+                "source": pronunciation.get("description", "Audio source"),
                 "message": str(exc),
             }

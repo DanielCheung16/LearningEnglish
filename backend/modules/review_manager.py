@@ -1,13 +1,14 @@
 import json
 import os
-from datetime import datetime
-from typing import List, Dict, Optional
 import uuid
+from datetime import datetime
+from typing import Dict, List, Optional
+
 from .spaced_repetition import SpacedRepetitionAlgorithm
 
 
 class ReviewManager:
-    """管理复习计划和复习记录"""
+    """Manage review records using an FSRS-lite compatible state model."""
 
     def __init__(self, data_dir: str = "backend/data"):
         self.data_dir = data_dir
@@ -15,49 +16,116 @@ class ReviewManager:
         self._ensure_review_file()
 
     def _ensure_review_file(self):
-        """确保复习文件存在"""
         if not os.path.exists(self.review_file):
-            default_data = {
-                "review_records": []
-            }
-            self._write_json(self.review_file, default_data)
+            self._write_json(self.review_file, {"review_records": []})
 
     def _read_json(self, filepath: str) -> Dict:
-        """读取JSON文件"""
         try:
-            with open(filepath, 'r', encoding='utf-8') as f:
+            with open(filepath, "r", encoding="utf-8") as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             return {}
 
     def _write_json(self, filepath: str, data: Dict):
-        """写入JSON文件"""
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-    def initialize_review_for_word(self, word_id: str, word: str) -> Dict:
-        """
-        为新添加的单词初始化复习记录
-
-        参数:
-            word_id: 单词ID
-            word: 单词文本
-
-        返回:
-            创建的复习记录
-        """
+    def _load_review_data(self) -> Dict:
         review_data = self._read_json(self.review_file)
+        review_data.setdefault("review_records", [])
+        changed = False
 
-        # 检查是否已存在
-        for record in review_data["review_records"]:
-            if record["word_id"] == word_id:
+        for index, record in enumerate(review_data["review_records"]):
+            normalized = self._normalize_record(record)
+            if normalized != record:
+                review_data["review_records"][index] = normalized
+                changed = True
+
+        if changed:
+            self._write_json(self.review_file, review_data)
+
+        return review_data
+
+    def _normalize_record(self, record: Dict) -> Dict:
+        normalized = dict(record)
+        normalized.setdefault("review_dates", [])
+        normalized.setdefault("review_count", len(normalized["review_dates"]))
+
+        fsrs = dict(normalized.get("fsrs", {}))
+        if not fsrs:
+            fsrs = SpacedRepetitionAlgorithm.create_initial_state()
+            fsrs["stability"] = SpacedRepetitionAlgorithm.get_step_days(
+                max(int(normalized.get("review_count", 0)), 0)
+            )
+            fsrs["state"] = "learning" if normalized.get("review_count", 0) == 0 else "review"
+
+        fsrs.setdefault("difficulty", 5.0)
+        fsrs.setdefault("stability", SpacedRepetitionAlgorithm.get_step_days(0))
+        fsrs.setdefault("retrievability", 1.0)
+        fsrs.setdefault("lapses", normalized.get("lapse_count", 0))
+        fsrs.setdefault("desired_retention", SpacedRepetitionAlgorithm.DEFAULT_DESIRED_RETENTION)
+        fsrs.setdefault("state", "learning")
+
+        last_review_date = normalized.get("last_review_date")
+        parsed_last_review = SpacedRepetitionAlgorithm.parse_review_time(last_review_date)
+        elapsed_days = 0.0
+        if parsed_last_review:
+            elapsed_days = max(
+                (SpacedRepetitionAlgorithm.now() - parsed_last_review).total_seconds(),
+                0.0,
+            ) / 86400
+        fsrs["retrievability"] = round(
+            SpacedRepetitionAlgorithm.estimate_retrievability(
+                float(fsrs["stability"]),
+                elapsed_days,
+            ),
+            4,
+        )
+
+        normalized["fsrs"] = fsrs
+        normalized["lapse_count"] = int(fsrs.get("lapses", 0))
+        normalized["master_level"] = SpacedRepetitionAlgorithm.calculate_master_level(
+            normalized["review_dates"],
+            fsrs,
+        )
+
+        if fsrs.get("state") == "leech":
+            normalized["status"] = "leech"
+        elif normalized["master_level"] >= 85 and float(fsrs.get("stability", 0)) >= 15:
+            normalized["status"] = "mastered"
+        elif normalized.get("review_count", 0) > 0:
+            normalized["status"] = "in_progress"
+        else:
+            normalized["status"] = "pending"
+
+        if not normalized.get("next_review_date"):
+            next_review_time = SpacedRepetitionAlgorithm.now() + SpacedRepetitionAlgorithm.days_to_interval(
+                float(fsrs["stability"])
+            )
+            normalized["next_review_date"] = SpacedRepetitionAlgorithm.format_review_time(next_review_time)
+        else:
+            parsed_next = SpacedRepetitionAlgorithm.parse_review_time(normalized["next_review_date"])
+            if parsed_next:
+                normalized["next_review_date"] = SpacedRepetitionAlgorithm.format_review_time(parsed_next)
+
+        return normalized
+
+    def _find_record(self, review_data: Dict, word_id: str) -> Optional[Dict]:
+        for record in review_data.get("review_records", []):
+            if record.get("word_id") == word_id:
                 return record
+        return None
 
-        # 计算下一次复习日期（明天）
-        next_review_date = SpacedRepetitionAlgorithm.calculate_next_review_date(
-            current_review_count=0,
-            proficiency_level="familiar"
+    def initialize_review_for_word(self, word_id: str, word: str) -> Dict:
+        review_data = self._load_review_data()
+        existing = self._find_record(review_data, word_id)
+        if existing:
+            return existing
+
+        initial_state = SpacedRepetitionAlgorithm.create_initial_state()
+        next_review_time = SpacedRepetitionAlgorithm.now() + SpacedRepetitionAlgorithm.days_to_interval(
+            float(initial_state["stability"])
         )
 
         new_record = {
@@ -66,133 +134,114 @@ class ReviewManager:
             "word": word,
             "review_count": 0,
             "review_dates": [],
-            "next_review_date": next_review_date,
+            "next_review_date": SpacedRepetitionAlgorithm.format_review_time(next_review_time),
             "master_level": 0,
             "last_review_date": None,
-            "status": "pending"  # pending, in_progress, mastered
+            "status": "pending",
+            "lapse_count": 0,
+            "fsrs": initial_state,
         }
 
         review_data["review_records"].append(new_record)
         self._write_json(self.review_file, review_data)
-
         return new_record
 
     def get_today_review_list(self) -> List[Dict]:
-        """
-        获取今日需要复习的单词列表
-
-        返回:
-            今日需要复习的review记录列表
-        """
-        review_data = self._read_json(self.review_file)
+        review_data = self._load_review_data()
         today_reviews = []
 
-        for record in review_data["review_records"]:
-            if record["status"] != "mastered":
-                next_review_date = record.get("next_review_date")
-                if SpacedRepetitionAlgorithm.should_review_today(next_review_date):
-                    today_reviews.append(record)
+        for record in review_data.get("review_records", []):
+            if record.get("status") == "mastered":
+                continue
+            if SpacedRepetitionAlgorithm.should_review_today(record.get("next_review_date")):
+                today_reviews.append(record)
 
-        # 按next_review_date排序（最逾期的先复习）
-        today_reviews.sort(
-            key=lambda x: x.get("next_review_date", "2099-12-31")
-        )
-
+        today_reviews.sort(key=lambda x: x.get("next_review_date", "2099-12-31 23:59:59"))
         return today_reviews
 
+    def _apply_review_outcome(self, record: Dict, proficiency_level: str, trigger: str = "review") -> Dict:
+        now = SpacedRepetitionAlgorithm.now()
+        now_str = now.isoformat()
+        fsrs_state, next_review = SpacedRepetitionAlgorithm.update_state(
+            fsrs_state=record.get("fsrs", {}),
+            current_review_count=record.get("review_count", 0),
+            proficiency_level=proficiency_level,
+            last_review_date=record.get("last_review_date"),
+            now=now,
+        )
+
+        record["review_count"] = record.get("review_count", 0) + 1
+        record["last_review_date"] = now_str
+        record.setdefault("review_dates", []).append({
+            "proficiency": proficiency_level,
+            "review_date": now_str,
+            "scheduled_date": record.get("next_review_date"),
+            "trigger": trigger,
+        })
+        record["fsrs"] = fsrs_state
+        record["lapse_count"] = int(fsrs_state.get("lapses", 0))
+        record["next_review_date"] = SpacedRepetitionAlgorithm.format_review_time(next_review)
+        record["master_level"] = SpacedRepetitionAlgorithm.calculate_master_level(
+            record["review_dates"],
+            fsrs_state,
+        )
+
+        if fsrs_state.get("state") == "leech":
+            record["status"] = "leech"
+        elif record["master_level"] >= 85 and float(fsrs_state.get("stability", 0)) >= 15:
+            record["status"] = "mastered"
+        else:
+            record["status"] = "in_progress"
+
+        return record
+
     def submit_review(self, word_id: str, proficiency_level: str) -> Dict:
-        """
-        提交复习结果，更新下一次复习日期
+        review_data = self._load_review_data()
+        record = self._find_record(review_data, word_id)
+        if not record:
+            return {"success": False, "error": f"Word ID {word_id} not found"}
 
-        参数:
-            word_id: 单词ID
-            proficiency_level: 掌握程度 (unfamiliar/familiar/practiced/mastered)
-
-        返回:
-            更新后的复习记录
-        """
-        review_data = self._read_json(self.review_file)
-
-        for record in review_data["review_records"]:
-            if record["word_id"] == word_id:
-                # 更新复习记录
-                now = datetime.now().isoformat()
-                record["review_count"] = record.get("review_count", 0) + 1
-                record["last_review_date"] = now
-
-                # 记录本次复习
-                review_entry = {
-                    "proficiency": proficiency_level,
-                    "review_date": now,
-                    "scheduled_date": record.get("next_review_date")
-                }
-                record["review_dates"].append(review_entry)
-
-                # 计算下一次复习日期
-                record["next_review_date"] = SpacedRepetitionAlgorithm.calculate_next_review_date(
-                    current_review_count=record["review_count"],
-                    proficiency_level=proficiency_level
-                )
-
-                # 计算掌握程度
-                record["master_level"] = SpacedRepetitionAlgorithm.calculate_master_level(
-                    record["review_dates"]
-                )
-
-                # 判断是否已掌握（掌握程度>=75%）
-                if record["master_level"] >= 75 and proficiency_level in ["practiced", "mastered"]:
-                    record["status"] = "mastered"
-                else:
-                    record["status"] = "in_progress"
-
-                self._write_json(self.review_file, review_data)
-
-                return {
-                    "success": True,
-                    "record": record,
-                    "next_review_date": record["next_review_date"],
-                    "master_level": record["master_level"],
-                    "status": record["status"]
-                }
-
+        self._apply_review_outcome(record, proficiency_level, trigger="review")
+        self._write_json(self.review_file, review_data)
         return {
-            "success": False,
-            "error": f"单词ID {word_id} 不存在"
+            "success": True,
+            "record": record,
+            "next_review_date": record["next_review_date"],
+            "master_level": record["master_level"],
+            "status": record["status"],
+            "fsrs": record["fsrs"],
+        }
+
+    def penalize_duplicate_word(self, word_id: str) -> Dict:
+        review_data = self._load_review_data()
+        record = self._find_record(review_data, word_id)
+        if not record:
+            return {"success": False, "error": f"Word ID {word_id} not found"}
+
+        self._apply_review_outcome(record, "unfamiliar", trigger="duplicate_add")
+        self._write_json(self.review_file, review_data)
+        return {
+            "success": True,
+            "record": record,
+            "next_review_date": record["next_review_date"],
+            "master_level": record["master_level"],
+            "status": record["status"],
+            "fsrs": record["fsrs"],
         }
 
     def get_review_history(self, word_id: str) -> Optional[Dict]:
-        """
-        获取单词的复习历史
-
-        参数:
-            word_id: 单词ID
-
-        返回:
-            该单词的完整复习记录
-        """
-        review_data = self._read_json(self.review_file)
-
-        for record in review_data["review_records"]:
-            if record["word_id"] == word_id:
-                return record
-
-        return None
+        review_data = self._load_review_data()
+        return self._find_record(review_data, word_id)
 
     def get_review_stats(self) -> Dict:
-        """
-        获取复习统计信息
-
-        返回:
-            统计数据
-        """
-        review_data = self._read_json(self.review_file)
-        records = review_data["review_records"]
+        review_data = self._load_review_data()
+        records = review_data.get("review_records", [])
 
         total_words = len(records)
-        mastered_count = sum(1 for r in records if r["status"] == "mastered")
-        in_progress_count = sum(1 for r in records if r["status"] == "in_progress")
-        pending_count = sum(1 for r in records if r["status"] == "pending")
-
+        mastered_count = sum(1 for r in records if r.get("status") == "mastered")
+        in_progress_count = sum(1 for r in records if r.get("status") == "in_progress")
+        pending_count = sum(1 for r in records if r.get("status") == "pending")
+        leech_count = sum(1 for r in records if r.get("status") == "leech")
         today_reviews = self.get_today_review_list()
 
         avg_review_count = sum(r.get("review_count", 0) for r in records) / max(total_words, 1)
@@ -203,27 +252,18 @@ class ReviewManager:
             "mastered_count": mastered_count,
             "in_progress_count": in_progress_count,
             "pending_count": pending_count,
+            "leech_count": leech_count,
             "today_review_count": len(today_reviews),
             "average_review_count": round(avg_review_count, 2),
             "average_master_level": round(avg_master_level, 1),
-            "progress_percentage": round(mastered_count / max(total_words, 1) * 100, 1)
+            "progress_percentage": round(mastered_count / max(total_words, 1) * 100, 1),
         }
 
     def get_review_by_date_range(self, start_date: str, end_date: str) -> List[Dict]:
-        """
-        获取某日期范围内复习过的单词
-
-        参数:
-            start_date: 开始日期 (YYYY-MM-DD)
-            end_date: 结束日期 (YYYY-MM-DD)
-
-        返回:
-            复习记录列表
-        """
-        review_data = self._read_json(self.review_file)
+        review_data = self._load_review_data()
         filtered_records = []
 
-        for record in review_data["review_records"]:
+        for record in review_data.get("review_records", []):
             for review_entry in record.get("review_dates", []):
                 review_date = review_entry.get("review_date", "")[:10]
                 if start_date <= review_date <= end_date:
@@ -233,81 +273,50 @@ class ReviewManager:
         return filtered_records
 
     def delete_review_record(self, word_id: str) -> bool:
-        """
-        删除某单词的复习记录（通常在删除单词时调用）
-
-        参数:
-            word_id: 单词ID
-
-        返回:
-            是否成功删除
-        """
-        review_data = self._read_json(self.review_file)
-        original_count = len(review_data["review_records"])
-
+        review_data = self._load_review_data()
+        original_count = len(review_data.get("review_records", []))
         review_data["review_records"] = [
-            r for r in review_data["review_records"] if r["word_id"] != word_id
+            r for r in review_data.get("review_records", []) if r.get("word_id") != word_id
         ]
 
         if len(review_data["review_records"]) < original_count:
             self._write_json(self.review_file, review_data)
             return True
-
         return False
 
     def reset_word_review(self, word_id: str) -> bool:
-        """
-        重置单词的复习进度（将其回到初始状态）
+        review_data = self._load_review_data()
+        record = self._find_record(review_data, word_id)
+        if not record:
+            return False
 
-        参数:
-            word_id: 单词ID
+        initial_state = SpacedRepetitionAlgorithm.create_initial_state()
+        next_review_time = SpacedRepetitionAlgorithm.now() + SpacedRepetitionAlgorithm.days_to_interval(
+            float(initial_state["stability"])
+        )
+        record["review_count"] = 0
+        record["review_dates"] = []
+        record["next_review_date"] = SpacedRepetitionAlgorithm.format_review_time(next_review_time)
+        record["master_level"] = 0
+        record["last_review_date"] = None
+        record["status"] = "pending"
+        record["lapse_count"] = 0
+        record["fsrs"] = initial_state
 
-        返回:
-            是否成功重置
-        """
-        review_data = self._read_json(self.review_file)
-
-        for record in review_data["review_records"]:
-            if record["word_id"] == word_id:
-                # 重置为初始状态
-                next_review_date = SpacedRepetitionAlgorithm.calculate_next_review_date(
-                    current_review_count=0,
-                    proficiency_level="familiar"
-                )
-
-                record["review_count"] = 0
-                record["review_dates"] = []
-                record["next_review_date"] = next_review_date
-                record["master_level"] = 0
-                record["last_review_date"] = None
-                record["status"] = "pending"
-
-                self._write_json(self.review_file, review_data)
-                return True
-
-        return False
+        self._write_json(self.review_file, review_data)
+        return True
 
     def get_overdue_reviews(self) -> List[Dict]:
-        """
-        获取已逾期的复习（即应该今天或更早复习但还没做的）
-
-        返回:
-            逾期复习记录列表
-        """
-        review_data = self._read_json(self.review_file)
+        review_data = self._load_review_data()
         overdue_reviews = []
+        now = SpacedRepetitionAlgorithm.now()
 
-        today = datetime.now().strftime("%Y-%m-%d")
+        for record in review_data.get("review_records", []):
+            if record.get("status") == "mastered":
+                continue
+            next_review_date = SpacedRepetitionAlgorithm.parse_review_time(record.get("next_review_date"))
+            if next_review_date and next_review_date < now:
+                overdue_reviews.append(record)
 
-        for record in review_data["review_records"]:
-            if record["status"] != "mastered":
-                next_review_date = record.get("next_review_date")
-                if next_review_date and next_review_date < today:
-                    overdue_reviews.append(record)
-
-        # 按逾期天数排序
-        overdue_reviews.sort(
-            key=lambda x: x.get("next_review_date", "2099-12-31")
-        )
-
+        overdue_reviews.sort(key=lambda x: x.get("next_review_date", "2099-12-31 23:59:59"))
         return overdue_reviews

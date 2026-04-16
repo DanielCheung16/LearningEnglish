@@ -30,7 +30,7 @@
       </div>
 
       <div id="emptyState" class="empty-state" style="display:none;">
-        <div class="empty-state-icon">🎉</div>
+        <div class="empty-state-icon">Done</div>
         <div class="empty-state-title">No words due today</div>
         <p>Today's review queue is empty.</p>
         <a href="/study" class="btn btn-primary" style="margin-top:20px;">Add New Word</a>
@@ -77,7 +77,9 @@
     let currentReviewList = [];
     let currentIndex = 0;
 
-    function getReviewAudioPlayer() { return document.getElementById('audioPlayer'); }
+    function getReviewAudioPlayer() {
+      return document.getElementById('audioPlayer');
+    }
 
     async function speakWithBrowser(word) {
       if (!('speechSynthesis' in window)) return false;
@@ -105,14 +107,14 @@
       if (result.success && result.data.data) {
         const data = result.data.data;
         if (data.reachable) {
-          el.textContent = `Google TTS verification: reachable (${data.status_code})`;
+          el.textContent = `${data.source || 'Audio'}: reachable (${data.status_code})`;
           el.style.color = '#2e7d32';
         } else {
-          el.textContent = `Google TTS verification: unreachable (${data.message})`;
+          el.textContent = `${data.source || 'Audio'}: unreachable (${data.message})`;
           el.style.color = '#c62828';
         }
       } else {
-        el.textContent = `Google TTS verification: failed (${result.error || 'unknown error'})`;
+        el.textContent = `Audio verification: failed (${result.error || 'unknown error'})`;
         el.style.color = '#c62828';
       }
     }
@@ -171,16 +173,28 @@
         showCompletionMessage();
         return;
       }
+
       const review = currentReviewList[currentIndex];
       const word = review.word_detail || {};
+      const definitions = (word.translations || []).slice(0, 2);
+      const remainingDefinitions = Math.max((word.translations || []).length - definitions.length, 0);
+      const examples = (word.examples || []).filter(e => (e.sentence || '').trim()).slice(0, 2);
+
       document.getElementById('reviewWord').textContent = word.word || '';
       document.getElementById('reviewPhonetic').textContent = word.phonetic || '';
-      document.getElementById('reviewTranslations').innerHTML = (word.translations || []).map(t => `<p>• ${t.meaning} <small>(${t.part_of_speech})</small></p>`).join('');
-      if (word.examples && word.examples.length > 0) {
-        document.getElementById('examplesContent').innerHTML = word.examples.map(e => `
+      document.getElementById('reviewTranslations').innerHTML = definitions.length
+        ? definitions.map(t => `<p>- ${t.meaning} <small>(${t.part_of_speech})</small></p>`).join('')
+        : '<p style="color:#999;">No definition yet.</p>';
+
+      if (remainingDefinitions > 0) {
+        document.getElementById('reviewTranslations').innerHTML += `<p style="color:#999;font-size:12px;">+ ${remainingDefinitions} more definitions</p>`;
+      }
+
+      if (examples.length > 0) {
+        document.getElementById('examplesContent').innerHTML = examples.map(e => `
           <div class="example-item">
             <div class="example-sentence">${e.sentence}</div>
-            <div class="example-translation">${e.translation}</div>
+            ${e.translation ? `<div class="example-translation">${e.translation}</div>` : ''}
             <div class="example-domain">${e.domain}</div>
           </div>`).join('');
         document.getElementById('reviewExamples').style.display = 'block';
@@ -188,6 +202,7 @@
         document.getElementById('examplesContent').innerHTML = '';
         document.getElementById('reviewExamples').style.display = 'none';
       }
+
       document.getElementById('completedCount').textContent = currentIndex;
       document.getElementById('reviewedCount').textContent = currentIndex;
       document.getElementById('remainingCount').textContent = currentReviewList.length - currentIndex - 1;
@@ -210,7 +225,7 @@
     function showCompletionMessage() {
       document.getElementById('reviewContainer').style.display = 'none';
       document.getElementById('emptyState').innerHTML = `
-        <div class="empty-state-icon">🎉</div>
+        <div class="empty-state-icon">Done</div>
         <div class="empty-state-title">Today's review is complete</div>
         <p>You finished everything in the queue.</p>
         <div style="margin-top:20px;">

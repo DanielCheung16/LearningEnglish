@@ -29,14 +29,14 @@
 
         <div class="form-group">
           <label for="phonetic">Phonetic</label>
-          <input type="text" id="phonetic" placeholder="Example: /ˈælɡərɪðəm/">
+          <input type="text" id="phonetic" placeholder="Leave blank to auto-fill">
         </div>
 
         <div class="form-group">
-          <label>Translations *</label>
+          <label>Definitions</label>
           <div id="translationsContainer" style="margin-bottom:10px;">
             <div style="display:flex;gap:10px;margin-bottom:10px;">
-              <input type="text" class="translation-input" placeholder="Meaning" required>
+              <input type="text" class="translation-input" placeholder="Meaning">
               <select class="pos-select" style="flex:0 0 auto;width:120px;">
                 <option value="noun">Noun</option>
                 <option value="verb">Verb</option>
@@ -47,7 +47,8 @@
               <button type="button" onclick="removeTranslation(this)" class="btn btn-outline" style="flex:0 0 auto;padding:8px 12px;color:#f44336;border-color:#f44336;">Remove</button>
             </div>
           </div>
-          <button type="button" onclick="addTranslation()" class="btn btn-outline" style="color:#4CAF50;border-color:#4CAF50;padding:8px 12px;">Add Translation</button>
+          <button type="button" onclick="addTranslation()" class="btn btn-outline" style="color:#4CAF50;border-color:#4CAF50;padding:8px 12px;">Add Definition</button>
+          <p style="margin-top:8px;color:#777;font-size:12px;">Optional. If left blank, the app will try to fetch definitions from the dictionary API.</p>
         </div>
 
         <div class="form-group">
@@ -55,20 +56,18 @@
           <div id="examplesContainer" style="margin-bottom:10px;">
             <div style="margin-bottom:15px;padding:15px;background-color:#f9f9f9;border-radius:4px;">
               <input type="text" class="example-sentence" placeholder="English example" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;font-family:monospace;">
-              <input type="text" class="example-translation" placeholder="Translation" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;">
+              <input type="text" class="example-translation" placeholder="Translation (optional)" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;">
               <select class="example-domain" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:3px;margin-bottom:10px;">
-                <option value="Computer Science">Computer Science</option>
-                <option value="Electrical Engineering">Electrical Engineering</option>
-                <option value="Network">Network</option>
-                <option value="Database">Database</option>
-                <option value="Software Engineering">Software Engineering</option>
                 <option value="Hardware">Hardware</option>
-                <option value="Other">Other</option>
+                <option value="Terminology">Terminology</option>
+                <option value="Daliy">Daliy</option>
+                <option value="Others">Others</option>
               </select>
               <button type="button" onclick="removeExample(this)" class="btn btn-outline" style="color:#f44336;border-color:#f44336;padding:6px 12px;font-size:12px;">Remove</button>
             </div>
           </div>
           <button type="button" onclick="addExample()" class="btn btn-outline" style="color:#4CAF50;border-color:#4CAF50;padding:8px 12px;">Add Example</button>
+          <p style="margin-top:8px;color:#777;font-size:12px;">Optional. If left blank, the app will try to fetch examples from the dictionary API when available.</p>
         </div>
 
         <div class="btn-group">
@@ -77,6 +76,29 @@
           <a href="/review" class="btn btn-secondary">Go To Review</a>
         </div>
       </form>
+
+      <div style="margin-top:40px;padding:24px;border:1px solid #eee;border-radius:8px;background:#fafafa;">
+        <h2 style="margin-top:0;">Batch Import</h2>
+        <p style="color:#666;font-size:14px;margin-bottom:16px;">
+          Upload a CSV file to import multiple words at once.
+        </p>
+
+        <div class="form-group">
+          <label for="csvFileInput">CSV File</label>
+          <input type="file" id="csvFileInput" accept=".csv,text/csv">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+            <button type="button" class="btn btn-secondary" onclick="handleCsvUpload()">Import CSV</button>
+            <button type="button" class="btn btn-outline" onclick="downloadCsvTemplate()">Download CSV Template</button>
+          </div>
+        </div>
+
+        <div style="font-size:13px;color:#666;line-height:1.6;">
+          <div><strong>Supported columns:</strong> `word`, `phonetic`, `meaning`, `part_of_speech`, `example_sentence`, `example_translation`, `domain`</div>
+          <div><strong>Minimum required:</strong> `word`</div>
+          <div><strong>Domain options:</strong> `Hardware`, `Terminology`, `Daliy`, `Others`</div>
+          <div><strong>Tip:</strong> In Excel, put these as column headers in the first row, then save as CSV.</div>
+        </div>
+      </div>
 
       <div style="margin-top:50px;padding-top:50px;border-top:2px solid #eee;">
         <h2>Recent Words (Last 20)</h2>
@@ -98,7 +120,7 @@
       div.style.gap = '10px';
       div.style.marginBottom = '10px';
       div.innerHTML = `
-        <input type="text" class="translation-input" placeholder="Meaning" required>
+        <input type="text" class="translation-input" placeholder="Meaning">
         <select class="pos-select" style="flex:0 0 auto;width:120px;">
           <option value="noun">Noun</option>
           <option value="verb">Verb</option>
@@ -111,7 +133,9 @@
       c.appendChild(div);
     }
 
-    function removeTranslation(btn) { btn.parentElement.remove(); }
+    function removeTranslation(btn) {
+      btn.parentElement.remove();
+    }
 
     function addExample() {
       const c = document.getElementById('examplesContainer');
@@ -122,35 +146,36 @@
       div.style.borderRadius = '4px';
       div.innerHTML = `
         <input type="text" class="example-sentence" placeholder="English example" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;font-family:monospace;">
-        <input type="text" class="example-translation" placeholder="Translation" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;">
+        <input type="text" class="example-translation" placeholder="Translation (optional)" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;">
         <select class="example-domain" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:3px;margin-bottom:10px;">
-          <option value="Computer Science">Computer Science</option>
-          <option value="Electrical Engineering">Electrical Engineering</option>
-          <option value="Network">Network</option>
-          <option value="Database">Database</option>
-          <option value="Software Engineering">Software Engineering</option>
           <option value="Hardware">Hardware</option>
-          <option value="Other">Other</option>
+          <option value="Terminology">Terminology</option>
+          <option value="Daliy">Daliy</option>
+          <option value="Others">Others</option>
         </select>
         <button type="button" onclick="removeExample(this)" class="btn btn-outline" style="color:#f44336;border-color:#f44336;padding:6px 12px;font-size:12px;">Remove</button>
       `;
       c.appendChild(div);
     }
 
-    function removeExample(btn) { btn.parentElement.remove(); }
+    function removeExample(btn) {
+      btn.parentElement.remove();
+    }
 
     function showMessage(text, type) {
       const div = document.getElementById('message');
       div.className = `alert alert-${type}`;
       div.textContent = text;
       div.style.display = 'block';
-      setTimeout(() => { div.style.display = 'none'; }, 5000);
+      setTimeout(() => {
+        div.style.display = 'none';
+      }, 5000);
     }
 
     function resetWordForm() {
       document.getElementById('translationsContainer').innerHTML = `
         <div style="display:flex;gap:10px;margin-bottom:10px;">
-          <input type="text" class="translation-input" placeholder="Meaning" required>
+          <input type="text" class="translation-input" placeholder="Meaning">
           <select class="pos-select" style="flex:0 0 auto;width:120px;">
             <option value="noun">Noun</option>
             <option value="verb">Verb</option>
@@ -163,15 +188,12 @@
       document.getElementById('examplesContainer').innerHTML = `
         <div style="margin-bottom:15px;padding:15px;background-color:#f9f9f9;border-radius:4px;">
           <input type="text" class="example-sentence" placeholder="English example" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;font-family:monospace;">
-          <input type="text" class="example-translation" placeholder="Translation" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;">
+          <input type="text" class="example-translation" placeholder="Translation (optional)" style="width:100%;margin-bottom:10px;padding:8px;border:1px solid #ddd;border-radius:3px;">
           <select class="example-domain" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:3px;margin-bottom:10px;">
-            <option value="Computer Science">Computer Science</option>
-            <option value="Electrical Engineering">Electrical Engineering</option>
-            <option value="Network">Network</option>
-            <option value="Database">Database</option>
-            <option value="Software Engineering">Software Engineering</option>
             <option value="Hardware">Hardware</option>
-            <option value="Other">Other</option>
+            <option value="Terminology">Terminology</option>
+            <option value="Daliy">Daliy</option>
+            <option value="Others">Others</option>
           </select>
           <button type="button" onclick="removeExample(this)" class="btn btn-outline" style="color:#f44336;border-color:#f44336;padding:6px 12px;font-size:12px;">Remove</button>
         </div>`;
@@ -182,7 +204,12 @@
       const pos = document.querySelectorAll('.pos-select');
       const translations = [];
       inputs.forEach((input, i) => {
-        if (input.value.trim()) translations.push({ meaning: input.value.trim(), part_of_speech: pos[i].value });
+        if (input.value.trim()) {
+          translations.push({
+            meaning: input.value.trim(),
+            part_of_speech: pos[i].value
+          });
+        }
       });
       return translations;
     }
@@ -193,11 +220,168 @@
       const d = document.querySelectorAll('.example-domain');
       const examples = [];
       s.forEach((input, i) => {
-        if (input.value.trim() && t[i].value.trim()) {
-          examples.push({ sentence: input.value.trim(), translation: t[i].value.trim(), domain: d[i].value });
+        if (input.value.trim()) {
+          examples.push({
+            sentence: input.value.trim(),
+            translation: t[i].value.trim(),
+            domain: d[i].value
+          });
         }
       });
       return examples;
+    }
+
+    function splitDelimitedLine(line, delimiter) {
+      const values = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i += 1) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            current += '"';
+            i += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+          continue;
+        }
+
+        if (char === delimiter && !inQuotes) {
+          values.push(current.trim());
+          current = '';
+          continue;
+        }
+
+        current += char;
+      }
+
+      values.push(current.trim());
+      return values.map(value => value.replace(/^"|"$/g, '').trim());
+    }
+
+    function parseDelimitedText(text, delimiter) {
+      const lines = text
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+
+      if (lines.length < 2) {
+        throw new Error('Please provide a header row and at least one data row.');
+      }
+
+      const headers = splitDelimitedLine(lines[0], delimiter).map(header => header.trim().toLowerCase());
+      const words = [];
+
+      for (let i = 1; i < lines.length; i += 1) {
+        const cells = splitDelimitedLine(lines[i], delimiter);
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = (cells[index] || '').trim();
+        });
+
+        if (!row.word) {
+          continue;
+        }
+
+        const translations = row.meaning
+          ? [{ meaning: row.meaning, part_of_speech: row.part_of_speech || 'other' }]
+          : [];
+        const examples = row.example_sentence
+          ? [{
+              sentence: row.example_sentence,
+              translation: row.example_translation || '',
+              domain: row.domain || 'Other'
+            }]
+          : [];
+
+        words.push({
+          word: row.word,
+          phonetic: row.phonetic || '',
+          translations,
+          examples
+        });
+      }
+
+      if (!words.length) {
+        throw new Error('No valid word rows were found.');
+      }
+
+      return words;
+    }
+
+    function decodeCsvFile(buffer) {
+      const decoders = ['utf-8', 'gb18030'];
+      const suspiciousPattern = /ï»¿|�/;
+
+      for (const encoding of decoders) {
+        try {
+          const text = new TextDecoder(encoding, { fatal: false }).decode(buffer);
+          if (!suspiciousPattern.test(text)) {
+            return text.replace(/^\uFEFF/, '');
+          }
+        } catch (_error) {
+          // Try the next decoder.
+        }
+      }
+
+      return new TextDecoder('utf-8', { fatal: false }).decode(buffer).replace(/^\uFEFF/, '');
+    }
+
+    async function importWordsList(words) {
+      const result = await APIClient.batchImportWords(words);
+      if (!result.success) {
+        throw new Error(result.error || 'Batch import failed');
+      }
+
+      const data = result.data || {};
+      const importedCount = data.imported_count ?? words.length;
+      const totalCount = data.total_count ?? words.length;
+      const errorCount = (data.errors || []).length;
+      const summary = `Imported ${importedCount}/${totalCount} words${errorCount ? `, ${errorCount} errors` : ''}.`;
+      showMessage(summary, errorCount ? 'error' : 'success');
+      loadWordsList();
+    }
+
+    async function handleCsvUpload() {
+      const input = document.getElementById('csvFileInput');
+      const file = input.files && input.files[0];
+      if (!file) {
+        showMessage('Please choose a CSV file first.', 'error');
+        return;
+      }
+
+      try {
+        const buffer = await file.arrayBuffer();
+        const text = decodeCsvFile(buffer);
+        const words = parseDelimitedText(text, ',');
+        await importWordsList(words);
+        input.value = '';
+      } catch (error) {
+        showMessage('CSV import failed: ' + error.message, 'error');
+      }
+    }
+
+    function downloadCsvTemplate() {
+      const template = [
+        'word,phonetic,meaning,part_of_speech,example_sentence,example_translation,domain',
+        'algorithm,,算法,noun,This algorithm is efficient.,这个算法很高效。,Terminology',
+        'voltage,,电压,noun,The voltage is too high.,电压太高了。,Hardware',
+        'database,,数据库,noun,The database stores user records.,数据库存储用户记录。,Terminology'
+      ].join('\n');
+
+      const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'word_import_template.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
 
     async function speakWithBrowser(word) {
@@ -226,14 +410,14 @@
       if (result.success && result.data.data) {
         const data = result.data.data;
         if (data.reachable) {
-          el.textContent = `Google TTS verification: reachable (${data.status_code})`;
+          el.textContent = `${data.source || 'Audio'}: reachable (${data.status_code})`;
           el.style.color = '#2e7d32';
         } else {
-          el.textContent = `Google TTS verification: unreachable (${data.message})`;
+          el.textContent = `${data.source || 'Audio'}: unreachable (${data.message})`;
           el.style.color = '#c62828';
         }
       } else {
-        el.textContent = `Google TTS verification: failed (${result.error || 'unknown error'})`;
+        el.textContent = `Audio verification: failed (${result.error || 'unknown error'})`;
         el.style.color = '#c62828';
       }
     }
@@ -267,13 +451,23 @@
         const phonetic = document.getElementById('phonetic').value.trim();
         const translations = collectTranslations();
         const examples = collectExamples();
-        if (!translations.length) {
-          showMessage('Please add at least one translation.', 'error');
-          return;
-        }
         const result = await APIClient.addWord({ word, phonetic, translations, examples });
         if (result.success) {
-          showMessage(`Word "${word}" saved.`, 'success');
+          const response = result.data || {};
+          const isDuplicate = Boolean(response.duplicate) || (response.message || '').toLowerCase().includes('already exists');
+          if (isDuplicate) {
+            const masterLevel = response.review_status && response.review_status.master_level;
+            const nextReviewDate = response.review_status && response.review_status.next_review_date;
+            const masteryText = masterLevel !== undefined
+              ? ` Current mastery: ${Number(masterLevel).toFixed(1)}%.`
+              : '';
+            const nextReviewText = nextReviewDate
+              ? ` Next review: ${nextReviewDate}.`
+              : '';
+            showMessage(`"${word}" already exists. Review mastery was lowered.${masteryText}${nextReviewText}`, 'error');
+          } else {
+            showMessage(`Word "${word}" saved.`, 'success');
+          }
           document.getElementById('addWordForm').reset();
           resetWordForm();
           loadWordsList();
@@ -302,7 +496,24 @@
 
     function renderWordCard(word) {
       const safeWord = encodeURIComponent(word.word || '');
-      const translationsHtml = (word.translations || []).map(t => `<p style="margin:5px 0;color:#666;">• ${t.meaning}</p>`).join('');
+      const definitions = (word.translations || []).slice(0, 2);
+      const definitionsHtml = definitions.length
+        ? definitions.map(t => `<p style="margin:5px 0;color:#666;">- ${t.meaning}</p>`).join('')
+        : '<p style="margin:5px 0;color:#999;">No definition yet.</p>';
+      const remainingDefinitions = Math.max((word.translations || []).length - definitions.length, 0);
+      const moreDefinitionsHtml = remainingDefinitions
+        ? `<p style="margin:6px 0 0;color:#999;font-size:12px;">+ ${remainingDefinitions} more definitions</p>`
+        : '';
+      const firstExample = (word.examples || []).find(e => (e.sentence || '').trim());
+      const exampleHtml = firstExample
+        ? `
+          <div style="margin-top:10px;padding:10px;background:#f9f9f9;border-radius:4px;">
+            <div style="font-size:12px;color:#888;margin-bottom:4px;">Example</div>
+            <div style="color:#333;">${firstExample.sentence}</div>
+            ${firstExample.translation ? `<div style="color:#777;font-size:13px;margin-top:4px;">${firstExample.translation}</div>` : ''}
+          </div>`
+        : '';
+
       return `
         <div class="word-card">
           <div class="word-header">
@@ -312,7 +523,9 @@
             </div>
             <div><span style="color:#999;font-size:12px;">Added ${word.added_date || ''}</span></div>
           </div>
-          ${translationsHtml}
+          ${definitionsHtml}
+          ${moreDefinitionsHtml}
+          ${exampleHtml}
           <div style="margin-top:12px;">
             <button type="button" class="btn btn-secondary" onclick="playWordAudio(decodeURIComponent('${safeWord}'))" style="padding:6px 12px;font-size:12px;margin-right:8px;">Play Audio</button>
             <button type="button" class="btn btn-outline" onclick="handleDeleteWord('${word.id}', decodeURIComponent('${safeWord}'))" style="color:#f44336;border-color:#f44336;padding:6px 12px;font-size:12px;">Delete Word</button>
@@ -326,7 +539,9 @@
         if (!result.success) throw new Error(result.error);
         const words = result.data.data.slice(-20).reverse();
         const container = document.getElementById('wordsListContainer');
-        container.innerHTML = words.length ? words.map(renderWordCard).join('') : '<div class="empty-state"><p>No words yet.</p></div>';
+        container.innerHTML = words.length
+          ? words.map(renderWordCard).join('')
+          : '<div class="empty-state"><p>No words yet.</p></div>';
       } catch (error) {
         showMessage('Load words failed: ' + error.message, 'error');
       }

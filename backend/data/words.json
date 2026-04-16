@@ -2,8 +2,8 @@
   "metadata": {
     "version": "1.0",
     "created_date": "2026-04-15T17:39:08.966665",
-    "total_words": 4,
-    "last_sync": "2026-04-15T20:45:09.167908"
+    "total_words": 11,
+    "last_sync": "2026-04-15T22:21:25.189533"
   },
   "words": [
     {
@@ -46,7 +46,132 @@
       "added_date": "2026-04-15"
     },
     {
-      "id": "word_a9f8bbf0",
+      "id": "word_55abfa64",
+      "word": "main",
+      "phonetic": "/meɪn/",
+      "translations": [
+        {
+          "meaning": "Short for mainline.",
+          "part_of_speech": "verb"
+        },
+        {
+          "meaning": "To mainly play a specific character, or side, during a game.",
+          "part_of_speech": "verb"
+        },
+        {
+          "meaning": "Of a road: to convert into a main or primary road.",
+          "part_of_speech": "verb"
+        },
+        {
+          "meaning": "Of chief or leading importance; prime, principal.",
+          "part_of_speech": "adjective"
+        },
+        {
+          "meaning": "Chief, most important, or principal in extent, size, or strength; consisting of the largest part.",
+          "part_of_speech": "adjective"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "He mains the same character as me in that game.",
+          "translation": "",
+          "domain": "verb"
+        },
+        {
+          "sentence": "main timbers  main branch of a river  main body of an army",
+          "translation": "",
+          "domain": "adjective"
+        }
+      ],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_607c8458",
+      "word": "fsrsdemo",
+      "phonetic": "",
+      "translations": [],
+      "examples": [],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_ac1c9fa5",
+      "word": "here",
+      "phonetic": "/hiːɹ/",
+      "translations": [
+        {
+          "meaning": "(abstract) This place; this location.",
+          "part_of_speech": "noun"
+        },
+        {
+          "meaning": "(abstract) This time, the present situation.",
+          "part_of_speech": "noun"
+        },
+        {
+          "meaning": "Filler after a noun or demonstrative pronoun, solely for emphasis.",
+          "part_of_speech": "adjective"
+        },
+        {
+          "meaning": "Filler after a demonstrative pronoun but before the noun it modifies, solely for emphasis.",
+          "part_of_speech": "adjective"
+        },
+        {
+          "meaning": "(location) In, on, or at this place.",
+          "part_of_speech": "adverb"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "An Alzheimer patient's here may in his mind be anywhere he called home in the time he presently re-lives.",
+          "translation": "",
+          "domain": "noun"
+        },
+        {
+          "sentence": "John here is a rascal.",
+          "translation": "",
+          "domain": "adjective"
+        },
+        {
+          "sentence": "This here orange is too sour.",
+          "translation": "",
+          "domain": "adjective"
+        }
+      ],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_0c45f13b",
+      "word": "csvdemo",
+      "phonetic": "",
+      "translations": [],
+      "examples": [],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_f3870b6a",
+      "word": "he",
+      "phonetic": "/hi/",
+      "translations": [
+        {
+          "meaning": "他",
+          "part_of_speech": "noun"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "Is your cat a he or a she?",
+          "translation": "",
+          "domain": "noun"
+        },
+        {
+          "sentence": "The rulebook clearly states that \"if any student is caught cheating, he will be expelled\", and you were caught cheating, were you not, Anna?",
+          "translation": "",
+          "domain": "pronoun"
+        }
+      ],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_2183c4ce",
       "word": "algorithm",
       "phonetic": "/ˈælɡəɹɪðm̩/",
       "translations": [
@@ -55,7 +180,51 @@
           "part_of_speech": "noun"
         }
       ],
-      "examples": [],
+      "examples": [
+        {
+          "sentence": "This algorithm is efficient.",
+          "translation": "这个算法很高效。",
+          "domain": "Terminology"
+        }
+      ],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_6ac2334e",
+      "word": "voltage",
+      "phonetic": "/voʊltɪdʒ/",
+      "translations": [
+        {
+          "meaning": "电压",
+          "part_of_speech": "noun"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The voltage is too high.",
+          "translation": "电压太高了。",
+          "domain": "Hardware"
+        }
+      ],
+      "added_date": "2026-04-15"
+    },
+    {
+      "id": "word_f22b3dab",
+      "word": "database",
+      "phonetic": "/ˈdeɪtəˌbeɪs/",
+      "translations": [
+        {
+          "meaning": "数据库",
+          "part_of_speech": "noun"
+        }
+      ],
+      "examples": [
+        {
+          "sentence": "The database stores user records.",
+          "translation": "数据库存储用户记录。",
+          "domain": "Terminology"
+        }
+      ],
       "added_date": "2026-04-15"
     }
   ]

@@ -51,11 +51,13 @@ class DictionaryManager:
     @staticmethod
     def _normalize_entry(entry: Dict) -> Dict:
         phonetic = DictionaryManager._extract_phonetic(entry)
+        audio = DictionaryManager._extract_audio(entry)
         translations = DictionaryManager._extract_translations(entry)
         examples = DictionaryManager._extract_examples(entry)
 
         return {
             "phonetic": phonetic,
+            "audio_url": audio,
             "translations": translations,
             "examples": examples,
         }
@@ -91,6 +93,15 @@ class DictionaryManager:
                     return translations
 
         return translations
+
+    @staticmethod
+    def _extract_audio(entry: Dict) -> str:
+        for phonetic_item in entry.get("phonetics", []):
+            audio = (phonetic_item.get("audio") or "").strip()
+            if audio:
+                return audio
+
+        return ""
 
     @staticmethod
     def _extract_examples(entry: Dict) -> List[Dict]:
