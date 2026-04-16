@@ -99,6 +99,121 @@ python run.py
 - 复习页：`http://localhost:5000/review`
 - 设置页：`http://localhost:5000/settings`
 
+## 第一次上手指南
+
+如果你是第一次使用这个项目，建议按下面顺序操作。
+
+### 1. 拉取项目
+
+```bash
+git clone <your-repo-url>
+cd English_learning
+```
+
+### 2. 安装依赖
+
+```bash
+pip install -r backend/requirements.txt
+```
+
+### 3. 启动程序
+
+在项目根目录运行：
+
+```bash
+python run.py
+```
+
+看到启动提示后，打开浏览器访问：
+
+```text
+http://localhost:5000
+```
+
+### 4. 先不要急着配置邮件
+
+第一次使用时，不需要先配置邮箱。
+
+建议先直接体验核心功能：
+- 进入 `/study`
+- 添加 1 到 2 个单词
+- 测试自动补音标、释义、发音
+- 再进入 `/review` 看复习页面
+
+邮件提醒是可选功能，确认系统能正常使用后再去 `/settings` 配置即可。
+
+### 5. 推荐第一次测试的方法
+
+你可以先试着添加一个常见词，比如：
+
+```text
+algorithm
+database
+voltage
+```
+
+保存后检查：
+- 是否自动补出了音标
+- 是否自动补出了英文释义
+- 是否可以播放发音
+
+### 6. 如果要批量导入
+
+进入 `/study` 页面下方的 `Batch Import` 区域：
+- 先点击 `Download CSV Template`
+- 用 Excel 打开模板
+- 填好内容后保存为 CSV
+- 再上传导入
+
+### 7. 数据保存在哪里
+
+你的单词和复习记录默认保存在本地：
+
+- `backend/data/words.json`
+- `backend/data/review_schedule.json`
+- `backend/data/user_config.json`
+
+这意味着：
+- 删除这些文件会丢失数据
+- 换一台电脑不会自动同步
+- 每个人的数据默认是各自本地保存
+
+### 8. 如果手机也要访问
+
+有两种常见方式：
+
+- 同一局域网：用电脑的局域网 IP 访问
+- Tailscale：用运行程序那台设备的 Tailscale IP 访问
+
+前提是：
+- 电脑开着
+- 程序正在运行
+
+### 9. 常见第一次使用问题
+
+#### 页面打不开
+- 确认你运行了 `python run.py`
+- 确认访问的是 `http://localhost:5000`
+
+#### 手机打不开
+- 不要用手机访问 `localhost`
+- 要用电脑的局域网 IP 或 Tailscale IP
+
+#### 发音没有声音
+- 先确认网络正常
+- 先在电脑浏览器测试
+- 手机上建议刷新页面后再试
+
+#### 邮件提醒不工作
+- 先确认程序正在运行
+- 再检查 `/settings` 里的 SMTP 配置
+
+### 10. 分享给别人时的建议
+
+如果你把项目发给同学：
+- 建议不要把你自己的 `backend/data/*.json` 一起提交
+- 让每个人自己创建和保存自己的词库数据
+
 ## 目录结构
 
 ```text
