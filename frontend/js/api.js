@@ -70,6 +70,13 @@ class APIClient {
     }
 
     /**
+     * 批量删除单词
+     */
+    static async batchDeleteWords(wordIds) {
+        return this.request('POST', '/words/batch-delete', { word_ids: wordIds });
+    }
+
+    /**
      * 搜索单词
      */
     static async searchWords(query) {
@@ -101,6 +108,13 @@ class APIClient {
      */
     static async getTodayReviewList() {
         return this.request('GET', '/review/today');
+    }
+
+    /**
+     * 获取今天新加入且还没学过一遍的单词
+     */
+    static async getTodayNewWords() {
+        return this.request('GET', '/review/today-new');
     }
 
     /**

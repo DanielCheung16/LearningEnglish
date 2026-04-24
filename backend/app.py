@@ -1,6 +1,8 @@
+import os
+import atexit
+
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-import os
 
 from backend.routes.word_routes import word_bp
 from backend.routes.review_routes import review_bp
@@ -79,7 +81,7 @@ def create_app(data_dir: str = "backend/data"):
         except Exception:
             pass
 
-    app.teardown_appcontext(lambda _exc: shutdown_scheduler())
+    atexit.register(shutdown_scheduler)
 
     return app
 

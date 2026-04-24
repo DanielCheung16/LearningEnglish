@@ -11,6 +11,7 @@
     <ul>
       <li><a href="/">Home</a></li>
       <li><a href="/study" class="active">Study</a></li>
+      <li><a href="/review?mode=new">Study Today's Words</a></li>
       <li><a href="/review">Review</a></li>
       <li><a href="/settings">Settings</a></li>
     </ul>
@@ -20,6 +21,7 @@
     <div class="content">
       <h1>Add New Word</h1>
       <div id="message" style="display:none;"></div>
+      <div id="postAddActions" style="display:none;margin:12px 0 20px;"></div>
 
       <form id="addWordForm" onsubmit="handleAddWord(event)">
         <div class="form-group">
@@ -73,7 +75,8 @@
         <div class="btn-group">
           <button type="submit" class="btn btn-primary">Save Word</button>
           <button type="reset" class="btn btn-outline" onclick="resetWordForm()">Reset Form</button>
-          <a href="/review" class="btn btn-secondary">Go To Review</a>
+          <a href="/review?mode=new" class="btn btn-secondary">Study Today's Words</a>
+          <a href="/review" class="btn btn-secondary">Review Due Words</a>
         </div>
       </form>
 
@@ -101,8 +104,16 @@
       </div>
 
       <div style="margin-top:50px;padding-top:50px;border-top:2px solid #eee;">
-        <h2>Recent Words (Last 20)</h2>
+        <h2>Word List</h2>
         <div id="audioVerificationStatus" style="margin:12px 0;font-size:12px;color:#666;"></div>
+        <div id="bulkDeleteBar" style="display:none;margin:14px 0 18px;padding:12px;border:1px solid #eee;border-radius:6px;background:#fafafa;">
+          <label style="display:inline-flex;align-items:center;gap:8px;margin-right:12px;">
+            <input type="checkbox" id="selectAllWords" onchange="toggleSelectAllWords(this.checked)">
+            Select all shown
+          </label>
+          <span id="selectedWordsCount" style="color:#666;margin-right:12px;">0 selected</span>
+          <button type="button" class="btn btn-outline" onclick="handleBatchDeleteWords()" style="color:#f44336;border-color:#f44336;padding:6px 12px;font-size:12px;">Delete Selected</button>
+        </div>
         <div id="wordsListContainer" style="margin-top:20px;"></div>
       </div>
     </div>
@@ -112,6 +123,8 @@
   <script>
     const studyAudioPlayer = new Audio();
     studyAudioPlayer.preload = 'auto';
+    let visibleWordIds = [];
+    const selectedWordIds = new Set();
 
     function addTranslation() {
       const c = document.getElementById('translationsContainer');
@@ -170,6 +183,22 @@
       setTimeout(() => {
         div.style.display = 'none';
       }, 5000);
+    }
+
+    function showPostAddActions(word, wordId) {
+      const container = document.getElementById('postAddActions');
+      if (!wordId) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      const reviewUrl = `/review?mode=new&word_id=${encodeURIComponent(wordId)}`;
+      container.innerHTML = `
+        <a href="${reviewUrl}" class="btn btn-primary" style="margin-right:10px;">Study This New Word Now</a>
+        <a href="/review?mode=new" class="btn btn-secondary">Study Today's Words</a>
+      `;
+      container.style.display = 'block';
     }
 
     function resetWordForm() {
@@ -465,8 +494,12 @@
               ? ` Next review: ${nextReviewDate}.`
               : '';
             showMessage(`"${word}" already exists. Review mastery was lowered.${masteryText}${nextReviewText}`, 'error');
+            showPostAddActions(word, response.word_id);
           } else {
-            showMessage(`Word "${word}" saved.`, 'success');
+            const nextReviewDate = response.review_status && response.review_status.next_review_date;
+            const reviewText = nextReviewDate ? ` It is ready to study now.` : '';
+            showMessage(`Word "${word}" saved.${reviewText}`, 'success');
+            showPostAddActions(word, response.word_id);
           }
           document.getElementById('addWordForm').reset();
           resetWordForm();
@@ -494,8 +527,77 @@
       }
     }
 
+    function updateBulkDeleteState() {
+      const selectedCount = selectedWordIds.size;
+      const selectedCountEl = document.getElementById('selectedWordsCount');
+      const selectAllEl = document.getElementById('selectAllWords');
+      const bulkDeleteBar = document.getElementById('bulkDeleteBar');
+
+      if (bulkDeleteBar) {
+        bulkDeleteBar.style.display = visibleWordIds.length ? 'block' : 'none';
+      }
+      if (selectedCountEl) {
+        selectedCountEl.textContent = `${selectedCount} selected`;
+      }
+      if (selectAllEl) {
+        const allShownSelected = visibleWordIds.length > 0 && visibleWordIds.every(id => selectedWordIds.has(id));
+        selectAllEl.checked = allShownSelected;
+        selectAllEl.indeterminate = selectedCount > 0 && !allShownSelected;
+      }
+    }
+
+    function toggleWordSelection(wordId, checked) {
+      if (checked) {
+        selectedWordIds.add(wordId);
+      } else {
+        selectedWordIds.delete(wordId);
+      }
+      updateBulkDeleteState();
+    }
+
+    function toggleSelectAllWords(checked) {
+      visibleWordIds.forEach(wordId => {
+        if (checked) {
+          selectedWordIds.add(wordId);
+        } else {
+          selectedWordIds.delete(wordId);
+        }
+      });
+
+      document.querySelectorAll('.word-select-checkbox').forEach(checkbox => {
+        checkbox.checked = checked;
+      });
+      updateBulkDeleteState();
+    }
+
+    async function handleBatchDeleteWords() {
+      const wordIds = Array.from(selectedWordIds);
+      if (!wordIds.length) {
+        showMessage('Please select at least one word to delete.', 'error');
+        return;
+      }
+
+      if (!window.confirm(`Delete ${wordIds.length} selected words? This will also remove their review records.`)) return;
+
+      try {
+        const result = await APIClient.batchDeleteWords(wordIds);
+        if (result.success) {
+          const deletedCount = result.data.deleted_count || wordIds.length;
+          selectedWordIds.clear();
+          showMessage(`Deleted ${deletedCount} selected words.`, 'success');
+          loadWordsList();
+        } else {
+          showMessage('Batch delete failed: ' + result.error, 'error');
+        }
+      } catch (error) {
+        showMessage('Batch delete failed: ' + error.message, 'error');
+      }
+    }
+
     function renderWordCard(word) {
       const safeWord = encodeURIComponent(word.word || '');
+      const safeWordId = String(word.id || '').replace(/'/g, "\\'");
+      const checkedAttr = selectedWordIds.has(word.id) ? 'checked' : '';
       const definitions = (word.translations || []).slice(0, 2);
       const definitionsHtml = definitions.length
         ? definitions.map(t => `<p style="margin:5px 0;color:#666;">- ${t.meaning}</p>`).join('')
@@ -517,9 +619,12 @@
       return `
         <div class="word-card">
           <div class="word-header">
-            <div>
-              <div class="word-text">${word.word || ''}</div>
-              <div class="word-phonetic">${word.phonetic || ''}</div>
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <input type="checkbox" class="word-select-checkbox" ${checkedAttr} onchange="toggleWordSelection('${safeWordId}', this.checked)" style="margin-top:8px;">
+              <div>
+                <div class="word-text">${word.word || ''}</div>
+                <div class="word-phonetic">${word.phonetic || ''}</div>
+              </div>
             </div>
             <div><span style="color:#999;font-size:12px;">Added ${word.added_date || ''}</span></div>
           </div>
@@ -537,11 +642,16 @@
       try {
         const result = await APIClient.getAllWords();
         if (!result.success) throw new Error(result.error);
-        const words = result.data.data.slice(-20).reverse();
+        const words = result.data.data.slice().reverse();
+        visibleWordIds = words.map(word => word.id).filter(Boolean);
+        Array.from(selectedWordIds).forEach(wordId => {
+          if (!visibleWordIds.includes(wordId)) selectedWordIds.delete(wordId);
+        });
         const container = document.getElementById('wordsListContainer');
         container.innerHTML = words.length
           ? words.map(renderWordCard).join('')
           : '<div class="empty-state"><p>No words yet.</p></div>';
+        updateBulkDeleteState();
       } catch (error) {
         showMessage('Load words failed: ' + error.message, 'error');
       }

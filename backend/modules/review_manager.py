@@ -125,7 +125,7 @@ class ReviewManager:
 
         initial_state = SpacedRepetitionAlgorithm.create_initial_state()
         next_review_time = SpacedRepetitionAlgorithm.now() + SpacedRepetitionAlgorithm.days_to_interval(
-            float(initial_state["stability"])
+            1
         )
 
         new_record = {
@@ -284,6 +284,24 @@ class ReviewManager:
             return True
         return False
 
+    def delete_review_records(self, word_ids: List[str]) -> int:
+        target_ids = {word_id for word_id in word_ids if word_id}
+        if not target_ids:
+            return 0
+
+        review_data = self._load_review_data()
+        original_count = len(review_data.get("review_records", []))
+        review_data["review_records"] = [
+            record
+            for record in review_data.get("review_records", [])
+            if record.get("word_id") not in target_ids
+        ]
+
+        deleted_count = original_count - len(review_data["review_records"])
+        if deleted_count:
+            self._write_json(self.review_file, review_data)
+        return deleted_count
+
     def reset_word_review(self, word_id: str) -> bool:
         review_data = self._load_review_data()
         record = self._find_record(review_data, word_id)
@@ -291,9 +309,7 @@ class ReviewManager:
             return False
 
         initial_state = SpacedRepetitionAlgorithm.create_initial_state()
-        next_review_time = SpacedRepetitionAlgorithm.now() + SpacedRepetitionAlgorithm.days_to_interval(
-            float(initial_state["stability"])
-        )
+        next_review_time = SpacedRepetitionAlgorithm.now()
         record["review_count"] = 0
         record["review_dates"] = []
         record["next_review_date"] = SpacedRepetitionAlgorithm.serialize_review_time(next_review_time)

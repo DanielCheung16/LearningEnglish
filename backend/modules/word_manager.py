@@ -144,6 +144,31 @@ class WordManager:
 
         return False
 
+    def batch_delete_words(self, word_ids: List[str]) -> Dict:
+        target_ids = {word_id for word_id in word_ids if word_id}
+        if not target_ids:
+            return {"success": False, "deleted_count": 0, "deleted_ids": []}
+
+        words_data = self._read_json(self.words_file)
+        original_words = words_data.get("words", [])
+        kept_words = [word for word in original_words if word.get("id") not in target_ids]
+        deleted_ids = [word.get("id") for word in original_words if word.get("id") in target_ids]
+
+        if not deleted_ids:
+            return {"success": False, "deleted_count": 0, "deleted_ids": []}
+
+        words_data["words"] = kept_words
+        words_data.setdefault("metadata", {})
+        words_data["metadata"]["total_words"] = len(kept_words)
+        words_data["metadata"]["last_sync"] = datetime.now().isoformat()
+        self._write_json(self.words_file, words_data)
+
+        return {
+            "success": True,
+            "deleted_count": len(deleted_ids),
+            "deleted_ids": deleted_ids,
+        }
+
     def batch_import_words(self, words_list: List[Dict]) -> Dict:
         import_count = 0
         errors = []

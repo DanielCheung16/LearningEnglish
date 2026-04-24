@@ -11,6 +11,7 @@
     <ul>
       <li><a href="/">Home</a></li>
       <li><a href="/study">Study</a></li>
+      <li><a href="/review?mode=new">Study Today's Words</a></li>
       <li><a href="/review" class="active">Review</a></li>
       <li><a href="/settings">Settings</a></li>
     </ul>
@@ -18,7 +19,7 @@
 
   <div class="container">
     <div class="content">
-      <h1>Word Review</h1>
+      <h1 id="reviewTitle">Today's Review Queue</h1>
 
       <div style="background-color:#f0f8f0;padding:15px;border-radius:4px;margin:20px 0;display:none;" id="progressInfo">
         <p style="margin:0;">Completed <strong id="completedCount">0</strong> / <strong id="totalCount">0</strong> words</p>
@@ -31,8 +32,8 @@
 
       <div id="emptyState" class="empty-state" style="display:none;">
         <div class="empty-state-icon">Done</div>
-        <div class="empty-state-title">No words due today</div>
-        <p>Today's review queue is empty.</p>
+        <div class="empty-state-title" id="emptyStateTitle">No words due today</div>
+        <p id="emptyStateMessage">Today's review queue is empty.</p>
         <a href="/study" class="btn btn-primary" style="margin-top:20px;">Add New Word</a>
       </div>
 
@@ -76,6 +77,23 @@
   <script>
     let currentReviewList = [];
     let currentIndex = 0;
+    const params = new URLSearchParams(window.location.search);
+    const reviewMode = params.get('mode') === 'new' ? 'new' : 'review';
+    const focusWordId = params.get('word_id');
+    const dailyScores = new Map();
+    const dailyThreshold = 2;
+    const requeueGapByLevel = {
+      unfamiliar: 2,
+      familiar: 3,
+      practiced: 0,
+      mastered: 0
+    };
+    const scoreByLevel = {
+      unfamiliar: 0.5,
+      familiar: 1,
+      practiced: 2,
+      mastered: 3
+    };
 
     function getReviewAudioPlayer() {
       return document.getElementById('audioPlayer');
@@ -146,10 +164,20 @@
       const loadingState = document.getElementById('loadingState');
       loadingState.style.display = 'block';
       try {
-        const result = await APIClient.getTodayReviewList();
+        configureReviewModeText();
+        const result = reviewMode === 'new'
+          ? await APIClient.getTodayNewWords()
+          : await APIClient.getTodayReviewList();
         const reviews = result.success ? result.data.data : [];
         if (reviews.length > 0) {
           currentReviewList = reviews;
+          if (focusWordId) {
+            currentReviewList.sort((a, b) => {
+              if (a.word_id === focusWordId) return -1;
+              if (b.word_id === focusWordId) return 1;
+              return 0;
+            });
+          }
           currentIndex = 0;
           document.getElementById('loadingState').style.display = 'none';
           document.getElementById('emptyState').style.display = 'none';
@@ -166,6 +194,19 @@
         document.getElementById('loadingState').style.display = 'none';
         alert('Load review list failed: ' + error.message);
       }
+    }
+
+    function configureReviewModeText() {
+      const isNewMode = reviewMode === 'new';
+      document.getElementById('reviewTitle').textContent = isNewMode
+        ? "Study Today's Words"
+        : "Today's Review Queue";
+      document.getElementById('emptyStateTitle').textContent = isNewMode
+        ? "No new words to study"
+        : "No words due today";
+      document.getElementById('emptyStateMessage').textContent = isNewMode
+        ? "Today's new-word queue is empty. New words leave this source list after their first rating."
+        : "Today's review queue is empty.";
     }
 
     function displayCurrentWord() {
@@ -210,12 +251,32 @@
       document.getElementById('playAudioBtn').onclick = () => playWordAudio(word.word);
     }
 
+    function shouldRequeueToday(wordId, proficiencyLevel) {
+      const score = scoreByLevel[proficiencyLevel] || 0;
+      const previousScore = dailyScores.get(wordId) || 0;
+      const nextScore = previousScore + score;
+      dailyScores.set(wordId, nextScore);
+      return nextScore < dailyThreshold;
+    }
+
+    function requeueCurrentWord(review, proficiencyLevel) {
+      if (!shouldRequeueToday(review.word_id, proficiencyLevel)) {
+        return;
+      }
+
+      const gap = requeueGapByLevel[proficiencyLevel] ?? 3;
+      const insertAt = Math.min(currentIndex + gap, currentReviewList.length);
+      currentReviewList.splice(insertAt, 0, review);
+    }
+
     async function submitReview(proficiencyLevel) {
       const review = currentReviewList[currentIndex];
       try {
         const result = await APIClient.submitReview(review.word_id, proficiencyLevel);
         if (!result.success) throw new Error(result.error);
         currentIndex += 1;
+        requeueCurrentWord(review, proficiencyLevel);
+        document.getElementById('totalCount').textContent = currentReviewList.length;
         setTimeout(() => displayCurrentWord(), 300);
       } catch (error) {
         alert('Submit failed: ' + error.message);
@@ -226,7 +287,7 @@
       document.getElementById('reviewContainer').style.display = 'none';
       document.getElementById('emptyState').innerHTML = `
         <div class="empty-state-icon">Done</div>
-        <div class="empty-state-title">Today's review is complete</div>
+        <div class="empty-state-title">${reviewMode === 'new' ? "Today's new words are complete" : "Today's review is complete"}</div>
         <p>You finished everything in the queue.</p>
         <div style="margin-top:20px;">
           <button onclick="location.href='/'" class="btn btn-primary">Back Home</button>

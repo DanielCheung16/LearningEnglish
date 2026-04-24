@@ -47,12 +47,17 @@ def add_word():
         result = word_manager.add_word(data)
         if result.get("success"):
             word_id = result["word_id"]
-            review_manager.initialize_review_for_word(word_id, data["word"])
+            review_record = review_manager.initialize_review_for_word(word_id, data["word"])
             return jsonify({
                 "success": True,
                 "message": "Word added successfully",
                 "word_id": word_id,
                 "word": result["word"],
+                "review_status": {
+                    "next_review_date": review_record.get("next_review_date"),
+                    "master_level": review_record.get("master_level"),
+                    "status": review_record.get("status"),
+                },
             }), 201
 
         return jsonify(result), 500
@@ -106,6 +111,31 @@ def delete_word(word_id):
             review_manager.delete_review_record(word_id)
             return jsonify({"success": True, "message": "Word deleted successfully"})
         return jsonify({"success": False, "error": f"Word ID {word_id} does not exist"}), 404
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@word_bp.route("/batch-delete", methods=["POST"])
+def batch_delete_words():
+    try:
+        data = request.get_json() or {}
+        word_ids = data.get("word_ids", [])
+
+        if not isinstance(word_ids, list) or not word_ids:
+            return jsonify({"success": False, "error": "word_ids must be a non-empty list"}), 400
+
+        result = word_manager.batch_delete_words(word_ids)
+        if not result.get("success"):
+            return jsonify({"success": False, "error": "No matching words were found"}), 404
+
+        review_deleted_count = review_manager.delete_review_records(result.get("deleted_ids", []))
+        return jsonify({
+            "success": True,
+            "message": f"Deleted {result['deleted_count']} words successfully",
+            "deleted_count": result["deleted_count"],
+            "review_deleted_count": review_deleted_count,
+            "deleted_ids": result.get("deleted_ids", []),
+        })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

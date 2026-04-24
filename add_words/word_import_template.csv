@@ -1,0 +1,74 @@
+word,phonetic,meaning,part_of_speech,example_sentence,example_translation,domain
+retain,,保留；保持,verb,"The model retains the original timing constraints to ensure a fair comparison across different implementations.",,Terminology
+8 positions apart,,相隔8个位置,phrase,"The two peaks are 8 positions apart in the sampled sequence, which is consistent with the expected delay.",,Terminology
+stack,,堆叠；把多个对象叠加在一起,verb,"We stack the feature maps along the channel dimension before feeding them into the next convolutional layer.",,Terminology
+spatial,,空间的,adjective,"Spatial correlation between adjacent pixels is exploited to reduce redundant memory accesses.",,Terminology
+spatial dimension,,空间维度,noun,"The spatial dimensions of the input are reduced after each pooling stage.",,Terminology
+convolutional,,卷积的,adjective,"We adopt a convolutional backbone to extract local features from the input image.",,Terminology
+scalar,,标量,noun,"The loss function outputs a scalar value for each training step.",,Terminology
+vector,,向量,noun,"Each token is represented by a feature vector before entering the attention block.",,Terminology
+tensor,,张量,noun,"The input tensor is reshaped to match the expected format of the accelerator.",,Terminology
+aggregate,,聚合；汇总,verb,"We aggregate the partial sums across processing elements at the end of each cycle.",,Terminology
+progressively,,逐步地；渐进地,adverb,"The learning rate is progressively reduced to stabilize the training process.",,Others
+distillation,,蒸馏；知识蒸馏,noun,"Model distillation is used to transfer knowledge from the teacher network to the student network.",,Terminology
+batch,,批；批次,noun,"The batch size was set to 64 during training to balance throughput and memory usage.",,Terminology
+diagonally,,沿对角线地；对角地,adverb,"The dominant entries are located diagonally in the covariance matrix.",,Terminology
+computationally,,在计算开销上；从计算角度看,adverb,"The exhaustive search method is computationally expensive for real-time applications.",,Others
+intensive tasks,,高负载任务；密集型任务,phrase,"The GPU is reserved for computationally intensive tasks such as training and large-scale simulation.",,Others
+stay constant,,保持不变,phrase,"During the sweep, all other parameters stay constant so that the effect of threshold voltage can be isolated.",,Terminology
+tera,,太；万亿（10^12）,prefix,"The processor is designed for tera-scale data movement in high-throughput applications.",,Terminology
+inference,,推理,noun,"The accelerator is optimized for low-latency inference rather than offline training.",,Terminology
+fabricated,,制造出来的；流片完成的,adjective,"The chip was fabricated in a 28 nm CMOS process and tested under nominal voltage conditions.",,Hardware
+contamination,,污染；串扰污染；对信号或测量结果的干扰,noun,"The measured delay may be affected by contamination from neighboring switching activity on the same routing channel.",,Hardware
+sketch,,草绘；粗略画出；定性画出,verb,"Please sketch the transient response of the output node before deriving the exact expression.",,Hardware
+transient,,瞬态；暂态,noun,"The transient at the output node becomes more pronounced when the load capacitance is increased.",,Hardware
+time constant,,时间常数（τ）,noun,"The RC time constant determines how fast the node voltage approaches its final value.",,Hardware
+active load,,有源负载,noun,"A PMOS transistor is used as an active load to achieve higher gain in the amplifier stage.",,Hardware
+win functionally,,在功能上胜出；功能上满足要求,phrase,"Although the layout is not area-efficient, the revised design still wins functionally because it produces the correct logic levels under all test cases.",,Hardware
+transaction,,事务；一次总线/协议传输,noun,"Each memory transaction is acknowledged only after the address and data phases are completed.",,Hardware
+abuse,,滥用；恶意利用；篡改性使用,verb,"The protocol is designed to prevent an adversary from abusing the control channel during quantum key distribution.",,Terminology
+dummy,,虚设的；占位的；伪的,adjective,"A dummy load was inserted to match the test environment used in the previous measurements.",,Hardware
+retrieve,,检索；取回；读取,verb,"The controller retrieves the instruction from memory before decoding the opcode.",,Terminology
+durable,,耐久的；耐用的；长期可靠的,adjective,"The interconnect material must be durable enough to withstand repeated thermal cycling.",,Hardware
+voltage headroom,/ˈvoʊltɪdʒ ˈhɛdruːm/,电压裕量；电路中为器件正常工作所需保留的电压空间,noun phrase,The current mirror requires enough voltage headroom to keep all transistors in saturation.,,Hardware
+contradictional,/ˌkɑːntrəˈdɪkʃənəl/,矛盾的; 相互冲突的; 常用形式是contradictory,adjective,The simulation result seems contradictional to the timing report and needs further checking.,,Others
+surpass,/sərˈpæs/,超过；优于；超出,verb,The optimized design can surpass the baseline implementation in both latency and power efficiency.,,Daily
+impedance,/ɪmˈpiːdəns/,阻抗；对交流信号的等效阻碍,noun,The input impedance of the amplifier must be high enough to avoid loading the previous stage.,,Terminology
+complementary,/ˌkɑːmpləˈmɛntri/,互补的；相辅相成的,adjective,CMOS logic uses complementary NMOS and PMOS networks to implement digital gates.,,Hardware
+indispensable,/ˌɪndɪˈspɛnsəbəl/,不可或缺的；必需的,adjective,Clock-domain crossing analysis is indispensable in a multi-clock FPGA design.,,Daily
+illustration,/ˌɪləˈstreɪʃən/,示意图；说明；图示,noun,Figure 3 provides an illustration of the proposed pipeline structure.,,Daily
+disclose,/dɪsˈkloʊz/,披露；公开；揭示,verb,The vendor does not disclose the detailed implementation of the proprietary IP core.,,Daily
+manipulate,/məˈnɪpjəleɪt/,操控；处理；篡改,verb,An attacker may manipulate the input stream to trigger unexpected hardware behavior.,,Terminology
+malicious,/məˈlɪʃəs/,恶意的；有攻击意图的,adjective,The system should detect malicious packets before they reach the trusted execution region.,,Terminology
+avocado,/ˌævəˈkɑːdoʊ/,牛油果；鳄梨,noun,The dataset includes non-technical labels such as avocado for image classification tasks.,,Others
+cipher,/ˈsaɪfər/,密码算法；加密方法,noun,The lightweight cipher is implemented in hardware to reduce encryption latency.,,Terminology
+sanitized,/ˈsænəˌtaɪzd/,经过清理的；已消毒的；已去除敏感信息的,adjective,The sanitized trace removes user-specific data before being used for debugging.,,Terminology
+unsanitized,/ʌnˈsænəˌtaɪzd/,未清理的；未去除敏感信息的,adjective,Using unsanitized input may expose the parser to injection attacks.,,Terminology
+prime number,/ˈpraɪm ˌnʌmbər/,质数；只能被1和自身整除的正整数,noun phrase,Prime numbers are widely used in cryptographic key generation.,,Terminology
+unitary,/ˈjuːnəˌtɛri/,酉的；整体的；单一的,adjective,"In quantum computing, a valid gate operation is represented by a unitary matrix.",,Terminology
+manufacture,/ˌmænjəˈfæktʃər/,制造；生产,verb/noun,Process variation introduced during manufacture can affect transistor threshold voltage.,,Hardware
+invertible,/ɪnˈvɝːtəbəl/,可逆的；可求逆的,adjective,The transformation must be invertible so that the original signal can be recovered.,,Terminology
+accommodating,/əˈkɑːməˌdeɪtɪŋ/,能够容纳的；适应性的,adjective,The interface is designed to be accommodating to different packet widths.,,Daily
+morph,/mɔːrf/,逐渐变成；变形；转换,verb,The control logic can morph into a low-power mode when the workload is light.,,Others
+incremental,/ˌɪŋkrəˈmɛntəl/,增量式的；逐步的,adjective,Incremental synthesis helps reduce compilation time after small RTL changes.,,Terminology
+prospect,/ˈprɑːspɛkt/,前景；可能性；预期,noun,The prospect of deploying the accelerator on FPGA depends on resource utilization.,,Daily
+sufficient,/səˈfɪʃənt/,足够的；充分的,adjective,The FIFO depth must be sufficient to absorb short bursts from the producer.,,Daily
+sustain,/səˈsteɪn/,维持；承受；持续支持,verb,The memory subsystem cannot sustain the required bandwidth under peak traffic.,,Terminology
+harness,/ˈhɑːrnəs/,利用；控制并使用,verb,The design harnesses spatial data reuse to reduce external memory accesses.,,Daily
+amortize,/ˈæmərˌtaɪz/,摊销；将开销分摊到多次操作中,verb,The setup cost can be amortized over many inference requests.,,Terminology
+exert,/ɪɡˈzɝːt/,施加；发挥；产生影响,verb,The parasitic capacitance can exert a significant influence on the critical path delay.,,Daily
+envison,/ɪnˈvɪʒən/,设想；预想；应为envision,verb,We envison a modular accelerator that can support multiple CNN workloads.,,Others
+hurdle to sth.,/ˈhɝːdəl tuː ˈsʌmθɪŋ/,某事的障碍；阻碍某事的因素,phrase,Limited on-chip memory is a major hurdle to deploying larger neural networks on FPGA.,,Daily
+at the expense of,/æt ði ɪkˈspɛns əv/,以……为代价,phrase,The design improves throughput at the expense of higher area and power consumption.,,Daily
+peripheral,/pəˈrɪfərəl/,外设；外围的,adjective/noun,The CPU communicates with the keyboard controller through a memory-mapped peripheral.,,Hardware
+volatile,/ˈvɑːlətəl/,易失的；不稳定的,adjective,SRAM is volatile memory and loses its stored data when power is removed.,,Hardware
+diode,/ˈdaɪoʊd/,二极管,noun,A diode-connected MOS transistor is often used to generate a bias voltage.,,Hardware
+subthreshold region,/ˌsʌbˈθrɛʃhoʊld ˈriːdʒən/,亚阈值区；晶体管低于阈值电压时仍有弱反型电流的工作区域,noun phrase,Leakage current in the subthreshold region becomes more important as the technology node scales down.,,Hardware
+current dissipation,/ˈkɝːrənt ˌdɪsəˈpeɪʃən/,电流耗散；由电流导致的功耗或能量消耗,noun phrase,Reducing unnecessary switching activity helps lower current dissipation in the digital core.,,Hardware
+diffusion capitance,/dɪˈfjuːʒən kəˈpæsətəns/,扩散电容；应为diffusion capacitance,noun phrase,Diffusion capitance at the drain node increases the load seen by the previous logic stage.,,Hardware
+lateral,/ˈlætərəl/,横向的；侧向的,adjective,The lateral electric field increases as the channel length becomes shorter.,,Hardware
+vertical,/ˈvɝːtɪkəl/,垂直的；纵向的,adjective,The vertical electric field is mainly controlled by the gate oxide and gate voltage.,,Hardware
+roll off,/ˈroʊl ɔːf/,下降；衰减；滚降,phrasal verb,The amplifier gain starts to roll off at high frequency due to parasitic capacitance.,,Terminology
+scatter,/ˈskætər/,散射；分散,verb/noun,Carrier scatter in the channel can reduce mobility and degrade drive current.,,Terminology
+induce,/ɪnˈduːs/,引起；诱导；产生,verb,A large transient current can induce voltage noise on the power grid.,,Daily
+barrier,/ˈbæriər/,势垒；屏障；障碍,noun,The potential barrier controls carrier injection across the source-channel junction.,,Terminology

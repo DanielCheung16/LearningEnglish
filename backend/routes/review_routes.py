@@ -12,6 +12,8 @@ word_manager = WordManager()
 @review_bp.route("/today", methods=["GET"])
 def get_today_review_list():
     try:
+        from datetime import datetime
+        today = datetime.now().strftime("%Y-%m-%d")
         today_reviews = review_manager.get_today_review_list()
         enriched_reviews = []
 
@@ -19,12 +21,43 @@ def get_today_review_list():
             word_id = review_record.get("word_id")
             word = word_manager.get_word_by_id(word_id)
             if word:
+                if word.get("added_date") == today and review_record.get("review_count", 0) == 0:
+                    continue
                 enriched_reviews.append({**review_record, "word_detail": word})
 
         return jsonify({
             "success": True,
             "data": enriched_reviews,
             "count": len(enriched_reviews),
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@review_bp.route("/today-new", methods=["GET"])
+def get_today_new_words():
+    try:
+        today = request.args.get("date")
+        if not today:
+            from datetime import datetime
+            today = datetime.now().strftime("%Y-%m-%d")
+
+        new_word_reviews = []
+        for word in word_manager.get_all_words():
+            if word.get("added_date") != today:
+                continue
+
+            review_record = review_manager.get_review_history(word.get("id"))
+            if not review_record:
+                review_record = review_manager.initialize_review_for_word(word.get("id"), word.get("word", ""))
+
+            if review_record.get("review_count", 0) == 0:
+                new_word_reviews.append({**review_record, "word_detail": word})
+
+        return jsonify({
+            "success": True,
+            "data": new_word_reviews,
+            "count": len(new_word_reviews),
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
